@@ -1,27 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  
-  <h1>Simple Login Form</h1>
-  <br>
-
-  <form method = 'POST' , action = '/'>
-  <br>
-  Name: <input type = 'text' name="nome" required/>
-  <br>
-  Email: <input type = 'email' name="email" required/>
-  <br>
-  Senha: <input type = 'password' name="senha" required/>
-  <br>
-  <input type = 'submit'/> 
-  </form>
-  
-</body>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title> Index </title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">                     
+    </head>
+    <body></br></br></br></br></br>
+        <div align="center">
+          <div align="center" class="border">
+             <div class="header">
+                <h1 class="word">Index</h1>
+             </div></br></br></br>
+                <h1 class="bottom">
+                     Hi {{session.username}}!!</br></br> Welcome to the index page...                 
+                </h1></br></br></br>
+                <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+          </div>
+        </div>
+    </body>
 </html>
-
