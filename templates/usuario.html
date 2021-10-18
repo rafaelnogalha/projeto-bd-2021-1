@@ -1,0 +1,28 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title> {{ session.username }} </title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">                     
+    </head>
+    <body>
+        <ul>
+            <li><a href="pesquisar">Home</a></li>
+            <li><a href="news.asp">News</a></li>
+            <li><a href="contact.asp">Contact</a></li>
+            <li><a href="about.asp">About</a></li>
+        </ul>
+    </br></br></br></br></br>
+        <div align="center">
+          <div align="center" class="border">
+             <div class="header">
+                <h1 class="word">Usuario</h1>
+             </div></br></br></br>
+                <h1 class="bottom">
+                    Hi {{ session.username }}!!</br></br> Seja bem-vindo a página de usuário
+                </h1></br></br></br>
+                <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+          </div>
+        </div>
+    </body>
+    
+</html>

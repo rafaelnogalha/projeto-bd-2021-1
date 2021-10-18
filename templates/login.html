@@ -14,12 +14,16 @@
           <h2 class="word">
               <form action="{{ url_for('login') }}" method="post">
                 <div class="msg">{{ msg }}</div>
-                  <input id="username" name="username" type="text" placeholder="Enter Your Username" class="textbox"/></br></br>
-                  <input id="password" name="password" type="password" placeholder="Enter Your Password" class="textbox"/></br></br></br>
+                  <input id="nome" name="nome" type="text" placeholder="Insira o usuario" class="textbox"/></br></br>
+                  <input id="senha" name="senha" type="password" placeholder="Insira a senha" class="textbox"/></br></br></br>
+                  <input type="radio" id="usuario" name="tipo_especialidade" value="usuario" >
+                  <label for="usuario">Usuario</label>
+                  <input type="radio" id="administrador" name="tipo_especialidade" value="administrador">
+                  <label for="administrador">Administrador</label></br></br>
                   <input type="submit" class="btn" value="Sign In"></br></br>
               </form>
           </h2>
-          <p class="bottom">Dont't have an account?  <a class="bottom" href="{{url_for('register')}}"> Sign Up here</a></p>
+          <p class="bottom">Não está registrado?  <a class="bottom" href="{{url_for('register')}}"> Cadastre-se aqui</a></p>
         </div>
       </div>
   </body>
