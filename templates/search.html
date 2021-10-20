@@ -7,14 +7,13 @@
         <link rel="stylesheet" 
         href="https://cdnjs.cloudflare.com/ajax/libs/font-
         awesome/4.7.0/css/font-awesome.min.css">
-        <link rel="stylesheet" href="/static/style.css">
+        <link rel="stylesheet" href="/static/search.css">
     </head>
     <body>
         <form class="example" method="post" action="" 
          style="margin:auto;max-width:600px">
-            <input type="text" placeholder="Search by author or 
-             book, or all to see all the data" name="usuario">
-            <button type="submit"><i class="fa fa-search"></i>
+            <input type="text" placeholder="Procure por nome ou email de um usuário" name="usuario">
+            <button type="submit">Pesquisar<i class="fa fa-search"></i>
             </button>
         </form>
         <p></p>
@@ -26,5 +25,6 @@
             </tr>
             {% endfor %}
         </div>
+        <button type="submit" ><a  href="/login" class="fa fa-search">Voltar</a></button>
     </body>
 </html>

@@ -5,23 +5,26 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">                     
     </head>
     <body>
-        <ul>
-            <li><a href="pesquisar">Home</a></li>
-            <li><a href="news.asp">News</a></li>
-            <li><a href="contact.asp">Contact</a></li>
-            <li><a href="about.asp">About</a></li>
-        </ul>
-    </br></br></br></br></br>
+        <div>
+            <ul>
+                <li><a href="{{ url_for('dashboard_usuario', usuario = session.username) }}">Perfil</a></li>
+                <li><a href="news.asp">Feed</a></li>
+                <li><a href="{{ url_for('adicionar_postagens_template', usuario = session.username) }}">Postagens</a></li>
+                <li><a href="{{ url_for('procurar_entrar_grupo_template', usuario = session.username) }}">Grupos</a></li>
+                <li><a href="{{ url_for('procurar_adicionar_usuarios_template', usuario = session.username) }}">Procurar Usuarios</a></li>
+            </ul>
+        </div>
+        </br></br></br></br></br>
         <div align="center">
-          <div align="center" class="border">
-             <div class="header">
+            <div align="center" class="border">
+                <div class="header">
                 <h1 class="word">Usuario</h1>
-             </div></br></br></br>
+                </div></br></br></br>
                 <h1 class="bottom">
                     Hi {{ session.username }}!!</br></br> Seja bem-vindo a página de usuário
                 </h1></br></br></br>
                 <a href="{{ url_for('logout') }}" class="btn">Logout</a>
-          </div>
+            </div>
         </div>
     </body>
     

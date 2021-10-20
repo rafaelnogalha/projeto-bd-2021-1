@@ -6,6 +6,9 @@
     </head>
     <body>
         <ul>
+            <li><a href="{{ url_for('dashboard_admin', admin = session.username) }}">
+                Inicio
+            </a></li>
             {% for item in descricao_funcao %}
                 {% if item == "Criar Grupos" %}
                     <li><a href="{{ url_for('criar_grupo', admin = session.username) }}">
@@ -30,21 +33,17 @@
                 {% endif %}
             {% endfor %}
         </ul>
-        <!-- <li><a href="news.asp">Criar Grupo</a></li>
-        <li><a href="contact.asp">Deletar Grupo</a></li>
-        <li><a href="about.asp">Editar Grupo</a></li>
-        <li><a href="about.asp">Banir Usuario</a></li> -->
     </br></br></br></br></br>
         <div align="center">
           <div align="center" class="border">
             <div class="header">
-                <h1 class="word">Administrador</h1>
-            </div></br></br></br>
-            <div class="descricao_funcao">{{ descricao_funcao }}</div>
-                <h1 class="bottom">
-                    Hi {{ session.username }}!!</br></br> Seja bem-vindo a página de administrador
-                </h1></br></br></br>
-                <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+                <h1 class="word">Criar Grupo</h1>
+            </div></br></br></br></br></br>
+            <form action="{{ url_for('criar_grupo', admin = session.username) }}" method="post">
+                <div class="msg">{{ msg }}</div>
+                <input id="nome" name="nome" type="text" placeholder="Insira o Nome do grupo" class="textbox"/></br></br>
+                <input type="submit" class="btn" value="Criar Grupo"></br></br>
+            </form>
           </div>
         </div>
     </body>

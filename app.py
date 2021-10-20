@@ -1,7 +1,8 @@
 # Store this code in 'app.py' file
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
+from flask_login import login_required
 from database import criar_bd_tabelas, preencher_bd_tabelas
 import re
 
@@ -45,57 +46,48 @@ def login():
             msg = 'Entrou!'
             if(system == "usuario"):
                 session['id'] = account['id_usuario']
-                return render_template('usuario.html', msg = msg)
+                #return render_template('usuario.html', msg = msg)
+                return redirect(url_for('dashboard_usuario', usuario = session['username']))
             else:
                 session['id'] = account['id_administrador']
-                return render_template('administrador.html', msg = msg)
+                cursor.execute('SELECT id_funcao from funcoes_administradores where id_administrador = %s', (session['id'],))
+                ids_func = cursor.fetchall();
+                print("TIPO:",type(ids_func))
+                # print("TIPO Coluna:",type(ids_func[0]))
+                lista_funcoes = [] 
+                for linha in ids_func:
+                    values_view = linha.values()
+                    value_iterator = iter(values_view)
+                    first_value = next(value_iterator)
+                    # print("IDS0:", first_value)
+                    # print("IDS0:", type(first_value))
+                    cursor.execute('SELECT descricao FROM funcoes WHERE id_funcao = %s', (first_value, ))
+                    descricao_funcao = cursor.fetchone();
+                    print("descricao_funcao:", descricao_funcao)
+                    print("TIPO_desc:", type(descricao_funcao))
+                    desc = descricao_funcao.get("descricao")
+                    # for desc1 in descricao_funcao:
+                    #     print("desc:", desc1[9])
+                    #     print("TIPO_descasdasdasd:", type(desc1[9]))
+                        
+                    lista_funcoes.append(desc)
+                    session['functions'] = lista_funcoes
+                
+                #return render_template('administrador.html', msg = msg, descricao_funcao = lista_funcoes)
+                return redirect(url_for('dashboard_admin', admin = session['username']))
             # return render_template('index.html', msg = msg, system = system)
         else:
             msg = 'Nome / senha incorreto(s) !'
     return render_template('login.html', msg = msg)
 
-#endpoint for search
-# @app.route('/pesquisar', methods=['GET', 'POST'])
-# def search():
-#     if request.method == "POST":
-#         usuario = request.form['usuario']
-#         # search by author or book
-#         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-#         cursor.execute("SELECT nome from Usuarios WHERE nome LIKE %s", [usuario])
-#         mysql.connection.commit()
-#         data = cursor.fetchall()
-#         # all in the search box will return all the tuples
-#         if len(data) == 0 and usuario == 'all': 
-#             cursor.execute("SELECT nome from Usuarios")
-#             mysql.connection.commit()
-#             data = cursor.fetchall()
-#         return render_template('search.html', data=data)
-#     return render_template('search.html')
+@app.route('/dashboard_usuario/<string:usuario>', methods=['GET', 'POST'])
+def dashboard_usuario(usuario):
+    return render_template('usuario.html')
 
-@app.route('/pesquisar', methods=['GET', 'POST'])
-def search():
-    if request.method == "POST":
-        usuario = request.form['usuario']
-        # search by author or book
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("SELECT nome, email from usuarios WHERE nome LIKE %s OR email LIKE %s", (usuario, usuario))
-        data = cursor.fetchall()
-        print("DATA1: ",data)
-        print("DATA1: ",type(data))
-        # all in the search box will return all the tuples
-        if len(data) == 0 and usuario == 'all': 
-            cursor.execute("SELECT nome, email from usuarios")
-            data = cursor.fetchall()
-            print("DATA2: ",data)
-        return render_template('search.html', data=data)
-    return render_template('search.html')
-
-# @app.route('/pesquisar')
-# def logout():
-#     session.pop('loggedin', None)
-#     session.pop('id', None)
-#     session.pop('username', None)
-#     return redirect(url_for('login'))  
+@app.route('/dashboard_admin/<string:admin>', methods=['GET', 'POST'])
+def dashboard_admin(admin):
+    lista_funcoes = session.get('functions')
+    return render_template('administrador.html',descricao_funcao = lista_funcoes)
 
 @app.route('/logout')
 def logout():
@@ -159,6 +151,116 @@ def register():
     elif request.method == 'POST':
         msg = 'Por favor, preencha o formulário corretamente!'
     return render_template('register.html', msg = msg)
+
+
+@app.route('/criar_grupo/<string:admin>', methods =['GET', 'POST'])
+def criar_grupo(admin):
+    msg = ''
+    funcoes = session.get('functions')
+    
+    if request.method == 'POST' and 'nome' in request.form:
+        nome = request.form['nome']
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        if not nome:
+            msg = 'Por favor, preencha o formulário corretamente!'
+        elif not re.match(r'[A-Za-z0-9]+', nome):
+            msg = 'Nome deve conter apenas letras e números!'
+        else:
+            sql = ("INSERT INTO grupos(nome) VALUES (%s)")
+            cursor.execute(sql, (nome, ))
+            mysql.connection.commit()
+            msg = 'Grupo criado com sucesso!'
+    elif request.method == 'POST':
+        msg = 'Por favor, preencha o formulário corretamente!'
+    return render_template('criar_grupo.html', msg = msg, descricao_funcao = funcoes, admin = admin)
+
+@app.route('/procurar_editar_grupo_template/<string:admin>', methods =['GET', 'POST'])
+def procurar_editar_grupo_template(admin):
+    funcoes = session.get('functions')
+    return render_template('procurar_grupo.html', admin = admin , descricao_funcao = funcoes)
+
+@app.route('/procurar_editar_grupo', methods =['GET', 'POST'])
+def procurar_editar_grupo():
+    searchbox = "%" + request.values.get("text") + "%"
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT nome FROM grupos where nome Like %s order by nome", (searchbox, ))
+    result = cursor.fetchall()
+    return jsonify(result)
+    
+@app.route('/procurar_deletar_grupo_template/<string:admin>', methods =['GET', 'POST'])
+def procurar_deletar_grupo_template(admin):
+    funcoes = session.get('functions')
+    return render_template('deletar_grupo.html', admin = admin , descricao_funcao = funcoes)
+
+@app.route('/procurar_deletar_grupo', methods =['GET', 'POST'])
+def procurar_deletar_grupo():
+    searchbox = "%" + request.values.get("text") + "%"
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT nome FROM grupos where nome Like %s order by nome", (searchbox, ))
+    result = cursor.fetchall()
+    return jsonify(result)
+    
+@app.route('/procurar_banir_usuario_template/<string:admin>', methods =['GET', 'POST'])
+def procurar_banir_usuario_template(admin):
+    funcoes = session.get('functions')
+    return render_template('banir_usuario.html', admin = admin , descricao_funcao = funcoes)
+
+@app.route('/procurar_banir_usuario', methods =['GET', 'POST'])
+def procurar_banir_usuario():
+    searchbox = "%" + request.values.get("text") + "%"
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT nome FROM usuarios where nome Like %s order by nome", (searchbox, ))
+    result = cursor.fetchall()
+    return jsonify(result)
+
+@app.route('/procurar_editar_usuario_template/<string:admin>', methods =['GET', 'POST'])
+def procurar_editar_usuario_template(admin):
+    funcoes = session.get('functions')
+    print("sadasdfsdfasdfsdSSSDFSDF")
+    return render_template('editar_usuario.html', admin = admin , descricao_funcao = funcoes)
+
+
+@app.route('/procurar_entrar_grupo_template/<string:usuario>', methods =['GET', 'POST'])
+def procurar_entrar_grupo_template(usuario):
+    return render_template('entrar_grupo.html', usuario = usuario)
+
+@app.route('/procurar_entrar_grupo', methods =['GET', 'POST'])
+def procurar_entrar_grupo():
+    searchbox = "%" + request.values.get("text") + "%"
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT nome FROM grupos where nome Like %s order by nome", (searchbox, ))
+    result = cursor.fetchall()
+    return jsonify(result)
+
+@app.route('/procurar_adicionar_usuarios_template/<string:usuario>', methods =['GET', 'POST'])
+def procurar_adicionar_usuarios_template(usuario):
+    return render_template('entrar_grupo.html', usuario = usuario)
+
+@app.route('/procurar_adicionar_usuarios', methods =['GET', 'POST'])
+def procurar_adicionar_usuarios():
+    searchbox = "%" + request.values.get("text") + "%"
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT nome FROM usuarios where nome Like %s order by nome", (searchbox, ))
+    result = cursor.fetchall()
+    return jsonify(result)
+
+@app.route('/adicionar_postagens_template/<string:usuario>', methods =['GET', 'POST'])
+def adicionar_postagens_template(usuario):
+    return render_template('adicionar_postagens.html', usuario = usuario)
+
+@app.route('/adicionar_postagens', methods =['GET', 'POST'])
+def adicionar_postagens():
+    msg = ''
+    if request.method == 'POST' and 'descricao' in request.form:
+        descricao = request.form['descricao']
+        cursor = mysql.connection.cursor()
+        
+        cursor.execute("INSERT INTO postagens_usuarios(id_usuario, descricao) VALUES(%s, %s)", (session['id'], descricao, ))
+        mysql.connection.commit()
+        msg = 'Postagem adicionada com sucesso'
+    else:
+        msg = 'Por favor, não poste nada em branco!'
+    return render_template('adicionar_postagens.html', msg = msg)
 
 
 if __name__ == "__main__":
