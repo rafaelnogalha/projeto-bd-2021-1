@@ -4,6 +4,7 @@
       <meta charset="UTF-8">
       <title> Postagens </title>
       <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">              
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   </head>
   <body>
     <div>
@@ -28,6 +29,28 @@
               </form>
           </h2>
         </div>
+        <!-- <input id="livebox" name="nome" type="text" placeholder="Insira o nome do usuário"/> -->
+        <p id = "datalist"></p>
       </div>
   </body>
+
+  <script>
+    $(document).ready(function(){
+      $.ajax({
+          method:"post",
+          url:"/procurar_postagem",
+          data:{ },
+          success:function(res){   
+              var data = "<ul>";
+              $.each(res,function(index,value){
+                  
+                data += `<li><strong><font color="blue">${value[0]}</font></strong>: ${value[1]}</li>`;
+                  
+              });
+              data += "</ul>";
+              $("#datalist").html(data);
+          }
+      });
+    });
+  </script>
 </html>

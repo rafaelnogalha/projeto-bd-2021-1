@@ -35,6 +35,7 @@
     {% endfor %}
     <input id="livebox" name="nome" type="text" placeholder="Insira o nome do grupo"/>
     <p id = "datalist"></p>
+    <button onclick="clickFunction()">Editar</button>
 </body>
 <script>
     $(document).ready(function(){
@@ -42,14 +43,15 @@
             $("#datalist").empty();
             $.ajax({
                 method:"post",
-                url:"/procurar_editar_grupo",
+                url:"/procurar_grupo",
                 data:{text:$("#livebox").val()},
                 success:function(res){
                     
                     var data = "<ul>";
                     $.each(res,function(index,value){
                         
-                        data += "<li>"+value+"</li>";
+                        
+                        data += `<li class="list-item" id = "index${index}" data-value="${value}">${value}<input type="radio" class="list-input" name = "same-name">Editar</button></li>`;
                         
                     });
                     data += "</ul>";
@@ -58,5 +60,44 @@
             });
         });
     });
+    function clickFunction() {
+        var elements_in = document.getElementsByClassName("list-input");
+        var elements_li = document.getElementsByClassName("list-item");
+        // l = document.getElementById("1").getAttribute('data-value');
+        // console.log(l);
+        // var el = "";
+        var l;
+        for (var i = 0; i < elements_in.length; i++) {
+            if(elements_in[i].checked == true){
+                l = $(elements_li[i]).attr("data-value");
+                // arr.push(l);
+            }
+        }
+        fetch('/editar_grupo_template', {
+
+        // Declare what type of data we're sending
+        headers: {
+        'Content-Type': 'application/json'
+        },
+
+        // Specify the method
+        method: 'POST',
+
+        // A JSON payload
+        body: JSON.stringify({
+            "Grupo a ser editado": l
+        })
+        
+        }).then(function (response) { // At this point, Flask has printed our JSON
+            return response.text();
+        }).then(function (text) {
+
+        console.log('POST response: ');
+        document.write(text);
+        // // Should be 'OK' if everything was successful
+        console.log(text);
+        });
+        //return arr;
+    }
 </script>
 </html>

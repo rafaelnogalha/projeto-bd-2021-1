@@ -157,19 +157,24 @@ def register():
 def criar_grupo(admin):
     msg = ''
     funcoes = session.get('functions')
-    
     if request.method == 'POST' and 'nome' in request.form:
         nome = request.form['nome']
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT nome FROM grupos WHERE nome = %s', (nome, ))
+        nome_e = cursor.fetchone()
+        
         if not nome:
             msg = 'Por favor, preencha o formulário corretamente!'
         elif not re.match(r'[A-Za-z0-9]+', nome):
             msg = 'Nome deve conter apenas letras e números!'
         else:
-            sql = ("INSERT INTO grupos(nome) VALUES (%s)")
-            cursor.execute(sql, (nome, ))
-            mysql.connection.commit()
-            msg = 'Grupo criado com sucesso!'
+            if nome_e == None:
+                sql = ("INSERT INTO grupos(nome) VALUES (%s)")
+                cursor.execute(sql, (nome, ))
+                mysql.connection.commit()
+                msg = 'Grupo criado com sucesso!'
+            else: 
+               msg = 'Este grupo já existe!' 
     elif request.method == 'POST':
         msg = 'Por favor, preencha o formulário corretamente!'
     return render_template('criar_grupo.html', msg = msg, descricao_funcao = funcoes, admin = admin)
@@ -179,53 +184,184 @@ def procurar_editar_grupo_template(admin):
     funcoes = session.get('functions')
     return render_template('procurar_grupo.html', admin = admin , descricao_funcao = funcoes)
 
-@app.route('/procurar_editar_grupo', methods =['GET', 'POST'])
-def procurar_editar_grupo():
-    searchbox = "%" + request.values.get("text") + "%"
-    cursor = mysql.connection.cursor()
-    cursor.execute("SELECT nome FROM grupos where nome Like %s order by nome", (searchbox, ))
-    result = cursor.fetchall()
-    return jsonify(result)
+@app.route('/editar_grupo_template', methods =['GET', 'POST'])
+def editar_grupo_template():
+    # POST request
+    msg = ''
+    funcoes = session.get('functions')
+    if request.method == 'POST':
+        grupos = request.get_json()
+        for linha in grupos.items():
+            arr = linha[1]
+        print(arr)
+        return render_template('editar_grupo.html', msg = msg, grupo = arr, descricao_funcao = funcoes)
+
+@app.route('/editar_grupo', methods =['GET', 'POST'])
+def editar_grupo():
+    # POST request
+    msg = ''
+    funcoes = session.get('functions')
+    if request.method == 'POST' and 'nome' in request.form:
+        nome = request.form['nome']
+        grupo_nome = request.form['grupo']
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT nome FROM grupos WHERE nome = %s', (nome, ))
+        result = cursor.fetchone()
+        if (result == None):
+            print("Foi")
+            cursor.execute("UPDATE grupos SET nome = %s WHERE nome = %s", (nome, grupo_nome, ))
+            mysql.connection.commit()
+            msg = 'nome do grupo alterado com sucesso!'
+        elif():
+            msg = 'Esse nome para grupo já existe. Tente outro'
+    return render_template('procurar_grupo.html', msg = msg, descricao_funcao = funcoes)
+        
     
 @app.route('/procurar_deletar_grupo_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_deletar_grupo_template(admin):
     funcoes = session.get('functions')
     return render_template('deletar_grupo.html', admin = admin , descricao_funcao = funcoes)
 
-@app.route('/procurar_deletar_grupo', methods =['GET', 'POST'])
-def procurar_deletar_grupo():
-    searchbox = "%" + request.values.get("text") + "%"
-    cursor = mysql.connection.cursor()
-    cursor.execute("SELECT nome FROM grupos where nome Like %s order by nome", (searchbox, ))
-    result = cursor.fetchall()
-    return jsonify(result)
+@app.route('/deletar_grupo', methods =['GET', 'POST'])
+def deletar_grupo():
+    # POST request
+    msg = ''
+    if request.method == 'POST':
+        grupos = request.get_json()
+        for linha in grupos.items():
+            arr = linha[1]
+        for item in arr:
+            sql = ("DELETE FROM grupos WHERE nome = %s")
+            cursor = mysql.connection.cursor()
+            cursor.execute(sql, (item, ))
+            mysql.connection.commit()
+            msg = 'Grupo deletado com sucesso!'
+        #return 'Sucesss', 200
+    return render_template('deletar_grupo.html', msg = msg) and 'Sucesss', 200
     
 @app.route('/procurar_banir_usuario_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_banir_usuario_template(admin):
     funcoes = session.get('functions')
     return render_template('banir_usuario.html', admin = admin , descricao_funcao = funcoes)
 
-@app.route('/procurar_banir_usuario', methods =['GET', 'POST'])
-def procurar_banir_usuario():
+@app.route('/procurar_editar_usuario_template/<string:admin>', methods =['GET', 'POST'])
+def procurar_editar_usuario_template(admin):
+    funcoes = session.get('functions')
+    return render_template('procurar_usuario.html', admin = admin , descricao_funcao = funcoes)
+
+@app.route('/editar_usuario_template', methods =['GET', 'POST'])
+def editar_usuario_template():
+    # POST request
+    msg = ''
+    funcoes = session.get('functions')
+    if request.method == 'POST':
+        usuarios = request.get_json()
+        for linha in usuarios.items():
+            arr = linha[1]
+        print(arr)
+        return render_template('editar_usuario.html', msg = msg, usuario = arr, descricao_funcao = funcoes)
+
+@app.route('/procurar_usuario', methods =['GET', 'POST'])
+def procurar_usuario():
     searchbox = "%" + request.values.get("text") + "%"
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT nome FROM usuarios where nome Like %s order by nome", (searchbox, ))
     result = cursor.fetchall()
     return jsonify(result)
 
-@app.route('/procurar_editar_usuario_template/<string:admin>', methods =['GET', 'POST'])
-def procurar_editar_usuario_template(admin):
+@app.route('/editar_usuario', methods =['GET', 'POST'])
+def editar_usuario():
+    # POST request
+    msg = ''
     funcoes = session.get('functions')
-    print("sadasdfsdfasdfsdSSSDFSDF")
-    return render_template('editar_usuario.html', admin = admin , descricao_funcao = funcoes)
+    if request.method == 'POST' and 'nome' in request.form:
+        nome = request.form['nome']
+        usuario_nome = request.form['usuario']
+        cursor = mysql.connection.cursor()
+        cursor.execute('SELECT nome FROM usuarios WHERE nome = %s', (nome, ))
+        result = cursor.fetchone()
+        if (result == None):
+            cursor.execute("UPDATE usuarios SET nome = %s WHERE nome = %s", (nome, usuario_nome, ))
+            mysql.connection.commit()
+            msg = 'nome do usuario alterado com sucesso!'
+        elif():
+            msg = 'Esse nome para usuario já existe. Tente outro'
+    return render_template('procurar_usuario.html', msg = msg, descricao_funcao = funcoes)
 
+@app.route('/banir_usuario', methods =['GET', 'POST'])
+def banir_usuario():
+    # POST request
+    id_admin = session['id']
+    msg = ''
+    if request.method == 'POST':
+        usuarios = request.get_json()
+        cursor = mysql.connection.cursor()
+        for linha in usuarios.items():
+            arr = linha[1]
+        for item in arr:
+            cursor.execute("SELECT email FROM usuarios where nome = %s", (item, ))
+            email_usuario = cursor.fetchone()
+            value_iterator_email = iter(email_usuario)
+            email_usuario = next(value_iterator_email)
+            cursor.execute("INSERT INTO banidos(id_administrador, email) VALUES (%s, %s)", (id_admin, email_usuario))
+            mysql.connection.commit()
+            print("ID ADMIN",type(id_admin))
+            sql = ("DELETE FROM usuarios WHERE nome = %s")
+            cursor.execute(sql, (item, ))
+            mysql.connection.commit()
+            msg = 'Usuário(s) banido(s) com sucesso!'
+        #return 'Sucesss', 200
+    return render_template('banir_usuario.html', msg = msg) and 'Sucesss', 200
+        
 
 @app.route('/procurar_entrar_grupo_template/<string:usuario>', methods =['GET', 'POST'])
 def procurar_entrar_grupo_template(usuario):
     return render_template('entrar_grupo.html', usuario = usuario)
 
-@app.route('/procurar_entrar_grupo', methods =['GET', 'POST'])
-def procurar_entrar_grupo():
+@app.route('/entrar_grupo', methods =['GET', 'POST'])
+def entrar_grupo():
+    id_usuario = session['id']
+    msg = ''
+    if request.method == 'POST':
+        grupos = request.get_json()
+        cursor = mysql.connection.cursor()
+        for linha in grupos.items():
+            arr = linha[1]
+        for item in arr:
+            cursor.execute("SELECT id_grupo FROM grupos_usuarios where id_usuario = %s ", (id_usuario, ))
+            ids_grupo_existe = cursor.fetchall()
+            print("IDS GRUPOS:", ids_grupo_existe)
+            cursor.execute("SELECT id_grupo FROM grupos where nome = %s", (item, ))
+            id_grupo = cursor.fetchone()
+            value_iterator_id = iter(id_grupo)
+            id_grupo = next(value_iterator_id)
+            print("ID GRUPO:", id_grupo)
+            flag = 0
+            for i in ids_grupo_existe:
+                print("IS:", i[0])
+                if i[0] == id_grupo:
+                    print("Não pode!")
+                    msg = 'Usuário já faz parte do grupo!'
+                    flag = 1
+                    print("PODE!")
+            if flag == 0:
+                cursor.execute("INSERT INTO grupos_usuarios(id_grupo, id_usuario) VALUES (%s, %s)", (id_grupo, id_usuario))
+                mysql.connection.commit()
+                msg = 'Usuário entrou com sucesso!'
+        #return 'Sucesss', 200
+    return render_template('usuario.html', msg = msg) and 'Sucesss', 200
+
+@app.route('/procurar_grupo_para_entrar', methods =['GET', 'POST'])
+def procurar_grupo_para_entrar():
+    id_usuario = session['id']
+    searchbox = "%" + request.values.get("text") + "%"
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT nome FROM grupos where nome Like %s order by nome", (searchbox, ))
+    result = cursor.fetchall()
+    return jsonify(result)
+
+@app.route('/procurar_grupo', methods =['GET', 'POST'])
+def procurar_grupo():
     searchbox = "%" + request.values.get("text") + "%"
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT nome FROM grupos where nome Like %s order by nome", (searchbox, ))
@@ -235,14 +371,6 @@ def procurar_entrar_grupo():
 @app.route('/procurar_adicionar_usuarios_template/<string:usuario>', methods =['GET', 'POST'])
 def procurar_adicionar_usuarios_template(usuario):
     return render_template('entrar_grupo.html', usuario = usuario)
-
-@app.route('/procurar_adicionar_usuarios', methods =['GET', 'POST'])
-def procurar_adicionar_usuarios():
-    searchbox = "%" + request.values.get("text") + "%"
-    cursor = mysql.connection.cursor()
-    cursor.execute("SELECT nome FROM usuarios where nome Like %s order by nome", (searchbox, ))
-    result = cursor.fetchall()
-    return jsonify(result)
 
 @app.route('/adicionar_postagens_template/<string:usuario>', methods =['GET', 'POST'])
 def adicionar_postagens_template(usuario):
@@ -261,6 +389,24 @@ def adicionar_postagens():
     else:
         msg = 'Por favor, não poste nada em branco!'
     return render_template('adicionar_postagens.html', msg = msg)
+
+@app.route('/procurar_postagem', methods =['GET', 'POST'])
+def procurar_postagem():
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT descricao FROM postagens_usuarios order by criado")
+    result_postagem = cursor.fetchall()
+    cursor.execute("SELECT id_usuario FROM postagens_usuarios order by criado")
+    result_usuario = cursor.fetchall()
+    u = []
+    for user in result_usuario:
+        cursor.execute("SELECT nome FROM usuarios where id_usuario = %s", (user, ))
+        nome = cursor.fetchall()
+        u.append(nome)
+    r = []
+    result = list(result_postagem)
+    for i in range(len(result_usuario)):
+        r.append(u[i]+result[i])
+    return jsonify(r)
 
 
 if __name__ == "__main__":

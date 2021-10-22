@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="header">
-        <h1 class="word">Editar Usuário</h1></br></br>
+        <h1 class="word">Editar Grupo</h1></br></br>
     </div>
     <li><a href="{{ url_for('dashboard_admin', admin = session.username) }}">
       Início
@@ -37,14 +37,10 @@
         {% endif %}
     {% endfor %}
     <h2 class="word">
-      <form action="{{ url_for('editar_usuario') }}" method="post">
+      <form action="{{ url_for('editar_grupo') }}" method="post">
         <div class="msg">{{msg}}</div>
-          <input id = "editar" name="nome" type="text" placeholder="Insira o novo nome do usuário"></br></br>
-          <!-- <input id = "editar" name="senha" type="text" placeholder="Insira a nova senha do usuário"></br></br>
-          <input id = "editar" name="email" type="text" placeholder="Insira o novo email do usuário"></br></br> -->
-          <input id = "editar" name ="usuario" value="{{usuario}}" type="text" readonly="readonly"></br></br>
-          <!-- <input id = "editar" name ="usuario" value="{{usuario}}" type="text" readonly="readonly"></br></br>
-          <input id = "editar" name ="usuario" value="{{usuario}}" type="text" readonly="readonly"></br></br> -->
+          <input id = "editar" name="nome" type="text" placeholder="Insira o novo nome do grupo"></br></br>
+          <input id = "editar" name ="grupo" value="{{grupo}}" type="text" readonly="readonly"></br></br>
           <input type="submit" class="btn" value="Editar"></br></br>
       </form>
     </h2>

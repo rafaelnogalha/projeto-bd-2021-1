@@ -5,8 +5,7 @@
 </head>
 <body>
     <div class="header">
-      <h1 class="word">Banir Usuário(s)</h1>
-      <div class="msg">{{ msg }}</div>
+        <h1 class="word">Editar usuário</h1>
     </div>
     <li><a href="{{ url_for('dashboard_admin', admin = session.username) }}">
         Inicio
@@ -34,9 +33,9 @@
             </a></li>
         {% endif %}
     {% endfor %}
-    <input id="livebox" name="nome" type="text" placeholder="Insira o nome do Usuário"/>
-    <p id="datalist"></p>
-    <button onclick="clickFunction()">Deletar!</button>
+    <input id="livebox" name="nome" type="text" placeholder="Insira o nome do usuário"/>
+    <p id = "datalist"></p>
+    <button onclick="clickFunction()">Editar</button>
 </body>
 <script>
     $(document).ready(function(){
@@ -52,7 +51,7 @@
                     $.each(res,function(index,value){
                         
                         
-                        data += `<li class="list-item" id = "index${index}" data-value="${value}">${value}<input type="checkbox" class="list-input"></li>`;
+                        data += `<li class="list-item" id = "index${index}" data-value="${value}">${value}<input type="radio" class="list-input" name = "same-name">Editar</button></li>`;
                         
                     });
                     data += "</ul>";
@@ -66,15 +65,15 @@
         var elements_li = document.getElementsByClassName("list-item");
         // l = document.getElementById("1").getAttribute('data-value');
         // console.log(l);
-        var arr = [];
+        // var el = "";
         var l;
         for (var i = 0; i < elements_in.length; i++) {
             if(elements_in[i].checked == true){
                 l = $(elements_li[i]).attr("data-value");
-                arr.push(l);
+                // arr.push(l);
             }
         }
-        fetch('/banir_usuario', {
+        fetch('/editar_usuario_template', {
 
         // Declare what type of data we're sending
         headers: {
@@ -86,7 +85,7 @@
 
         // A JSON payload
         body: JSON.stringify({
-            "Grupos": arr
+            "Grupo a ser editado": l
         })
         
         }).then(function (response) { // At this point, Flask has printed our JSON
@@ -94,7 +93,7 @@
         }).then(function (text) {
 
         console.log('POST response: ');
-
+        document.write(text);
         // // Should be 'OK' if everything was successful
         console.log(text);
         });
