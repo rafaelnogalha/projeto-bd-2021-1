@@ -8,8 +8,21 @@
       <h1 class="word">Banir Usuário(s)</h1>
       <div class="msg">{{ msg }}</div>
     </div>
+    {% if resultado == "vazio" %}
+    <div>
+        <img src="/static/uploads/img_default.png" class="avatar">
+    </div>
+    {% else %}
+    <div>
+        <!-- <img src="{{ url_for('display_image', filename=filename) }}" class="avatar"> -->
+        <img src="data:image/jpeg;base64,{{ foto_perfil }}" class="avatar"/>
+    </div>
+    {% endif %}
     <li><a href="{{ url_for('dashboard_admin', admin = session.username) }}">
         Inicio
+    </a></li>
+    <li><a href="{{ url_for('adicionar_postagens_administrador', admin = session.username) }}">
+        Postagens
     </a></li>
     {% for item in descricao_funcao %}
         {% if item == "Criar Grupos" %}
@@ -101,4 +114,13 @@
         //return arr;
     }
 </script>
+<style>
+    .avatar {
+    vertical-align: middle;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    }
+</style>
+
 </html>

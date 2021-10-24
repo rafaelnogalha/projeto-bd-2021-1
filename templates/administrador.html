@@ -5,7 +5,25 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">                     
     </head>
     <body>
+        {% if resultado == "vazio" %}
+            <div>
+                <img src="/static/uploads/img_default.png" class="avatar">
+            </div>
+        {% else %}
+            <div>
+                <img src="data:image/jpeg;base64,{{ foto_perfil }}" class="avatar"/>
+            </div>
+        {% endif %}
         <ul>
+            <li><a href="{{ url_for('dashboard_admin', admin = session.username) }}">
+                Inicio
+            </a></li>
+            <li><a href="{{ url_for('adicionar_postagens_administrador_template', admin = session.username) }}">
+                Postagens
+            </a></li>
+            <li><a href="{{ url_for('upload_form', admin = session.username) }}">
+                Foto de Perfil
+            </a></li>
             {% for item in descricao_funcao %}
                 {% if item == "Criar Grupos" %}
                     <li><a href="{{ url_for('criar_grupo', admin = session.username) }}">
@@ -40,7 +58,7 @@
             <div class="header">
                 <h1 class="word">Administrador</h1>
             </div></br></br></br>
-            <div class="descricao_funcao">{{ descricao_funcao }}</div>
+            <!-- <div class="descricao_funcao">{{ descricao_funcao }}</div> -->
                 <h1 class="bottom">
                     Hi {{ session.username }}!!</br></br> Seja bem-vindo a página de administrador
                 </h1></br></br></br>
@@ -48,5 +66,15 @@
           </div>
         </div>
     </body>
+
+    <style>
+        .avatar {
+        vertical-align: middle;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        }
+    </style>
+    
     
 </html>

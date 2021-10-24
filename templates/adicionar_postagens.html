@@ -7,10 +7,20 @@
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   </head>
   <body>
+    {% if resultado == "vazio" %}
+      <div>
+          <img src="/static/uploads/img_default.png" class="avatar">
+      </div>
+      {% else %}
+      <div>
+          <!-- <img src="{{ url_for('display_image', filename=filename) }}" class="avatar"> -->
+          <img src="data:image/jpeg;base64,{{ foto_perfil }}" class="avatar"/>
+      </div>
+    {% endif %}
     <div>
       <ul>
-          <li><a href="{{ url_for('dashboard_usuario', usuario = session.username) }}">Perfil</a></li>
-          <li><a href="news.asp">Feed</a></li>
+          <li><a href="{{ url_for('dashboard_usuario', usuario = session.username) }}">Inicio</a></li>
+          <li><a href="{{ url_for('upload_form') }}">Foto de Perfil</a></li>
           <li><a href="{{ url_for('adicionar_postagens_template', usuario = session.username) }}">Postagens</a></li>
           <li><a href="{{ url_for('procurar_entrar_grupo_template', usuario = session.username) }}">Grupos</a></li>
           <li><a href="{{ url_for('procurar_adicionar_usuarios_template', usuario = session.username) }}">Procurar Usuarios</a></li>
@@ -53,4 +63,12 @@
       });
     });
   </script>
+  <style>
+    .avatar {
+    vertical-align: middle;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    }
+  </style>
 </html>

@@ -7,6 +7,16 @@
     <div class="header">
         <h1 class="word">Editar Grupo</h1>
     </div>
+    {% if resultado == "vazio" %}
+        <div>
+            <img src="/static/uploads/img_default.png" class="avatar">
+        </div>
+        {% else %}
+        <div>
+            <!-- <img src="{{ url_for('display_image', filename=filename) }}" class="avatar"> -->
+            <img src="data:image/jpeg;base64,{{ foto_perfil }}" class="avatar"/>
+        </div>
+    {% endif %}
     <li><a href="{{ url_for('dashboard_admin', admin = session.username) }}">
         Inicio
     </a></li>
@@ -100,4 +110,12 @@
         //return arr;
     }
 </script>
+<style>
+    .avatar {
+    vertical-align: middle;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    }
+</style>
 </html>

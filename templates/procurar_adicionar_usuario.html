@@ -4,20 +4,35 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
+    {% if resultado == "vazio" %}
+        <div>
+            <img src="/static/uploads/img_default.png" class="avatar">
+        </div>
+        {% else %}
+            <div>
+                <!-- <img src="{{ url_for('display_image', filename=filename) }}" class="avatar"> -->
+                <img src="data:image/jpeg;base64,{{ foto_perfil }}" class="avatar"/>
+            </div>
+    {% endif %}
     <div class="header">
-        <h1 class="word">Entrar Grupo</h1>
+        <h1 class="word">Adicionar Amigos</h1>
     </div>
     <div>
       <ul>
-          <li><a href="{{ url_for('dashboard_usuario', usuario = session.username) }}">Perfil</a></li>
-          <li><a href="news.asp">Feed</a></li>
-          <li><a href="{{ url_for('adicionar_postagens_template', usuario = session.username) }}">Postagens</a></li>
-          <li><a href="{{ url_for('procurar_entrar_grupo_template', usuario = session.username) }}">Grupos</a></li>
-          <li><a href="{{ url_for('procurar_adicionar_usuarios_template', usuario = session.username) }}">Procurar Usuarios</a></li>
+            <li><a href="{{ url_for('dashboard_usuario', usuario = session.username) }}">Inicio</a></li>
+            <li><a href="{{ url_for('upload_form') }}">Foto de Perfil</a></li>
+            <li><a href="{{ url_for('adicionar_postagens_template', usuario = session.username) }}">Postagens</a></li>
+            <li><a href="{{ url_for('procurar_entrar_grupo_template', usuario = session.username) }}">Grupos</a></li>
+            <li><a href="{{ url_for('procurar_adicionar_usuarios_template', usuario = session.username) }}">Procurar Usuarios</a></li>
       </ul>
     </div>
-    <input id="livebox" name="nome" type="text" placeholder="Insira o nome do usuário"/>
+    <input id="livebox" name="nome" type="text" placeholder="Insira o nome do usuario"/>
+    <h1>Não são amigos</h1>
     <p id = "datalist"></p>
+    <button onclick="adicionarAmigo()">Adicionar!</button>
+    <h1>Amigos</h1>
+    <p id = "amigoslist"></p>
+    <button onclick="desfazerAmizade()">Desfazer Amizade</button>
 </body>
 <script>
     $(document).ready(function(){
@@ -32,7 +47,7 @@
                     var data = "<ul>";
                     $.each(res,function(index,value){
                         
-                        data += "<li>"+value+"</li>";
+                        data += `<li class="list-item" id = "index${index}" data-value="${value}">${value}<input type="checkbox" class="list-input"></li>`;
                         
                     });
                     data += "</ul>";
@@ -41,5 +56,104 @@
             });
         });
     });
+    function adicionarAmigo() {
+        var elements_in = document.getElementsByClassName("list-input");
+        var elements_li = document.getElementsByClassName("list-item");
+        var arr = [];
+        var l;
+        for (var i = 0; i < elements_in.length; i++) {
+            if(elements_in[i].checked == true){
+                l = $(elements_li[i]).attr("data-value");
+                arr.push(l);
+            }
+        }
+        fetch('/adicionar_usuario', {
+
+        // Declare what type of data we're sending
+        headers: {
+        'Content-Type': 'application/json'
+        },
+
+        // Specify the method
+        method: 'POST',
+
+        // A JSON payload
+        body: JSON.stringify({
+            "Amigos": arr
+        })
+        
+        }).then(function (response) { // At this point, Flask has printed our JSON
+            return response.text();
+        }).then(function (text) {
+
+        console.log('POST response: ');
+
+        // // Should be 'OK' if everything was successful
+        console.log(text);
+        });
+        //return arr;
+    }
+    $(document).ready(function(){
+      $.ajax({
+          method:"post",
+          url:"/mostrar_amigos",
+          data:{ },
+          success:function(res){   
+              var data = "<ul>";
+              $.each(res,function(index,value){
+                  
+                data += `<li li class="list-item-desfazer" id = "index${index}" data-value="${value}"><strong><font color="blue">${value[0]}</font></strong><input type="checkbox" class="list-input-desfazer"></li>`;
+                  
+              });
+              data += "</ul>";
+              $("#amigoslist").html(data);
+          }
+      });
+    });
+    function desfazerAmizade() {
+        var elements_in = document.getElementsByClassName("list-input-desfazer");
+        var elements_li = document.getElementsByClassName("list-item-desfazer");
+        var arr = [];
+        var l;
+        for (var i = 0; i < elements_in.length; i++) {
+            if(elements_in[i].checked == true){
+                l = $(elements_li[i]).attr("data-value");
+                arr.push(l);
+            }
+        }
+        fetch('/desfazer_amizade', {
+
+        // Declare what type of data we're sending
+        headers: {
+        'Content-Type': 'application/json'
+        },
+
+        // Specify the method
+        method: 'POST',
+
+        // A JSON payload
+        body: JSON.stringify({
+            "Ex-Amigos": arr
+        })
+        
+        }).then(function (response) { // At this point, Flask has printed our JSON
+            return response.text();
+        }).then(function (text) {
+
+        console.log('POST response: ');
+
+        // // Should be 'OK' if everything was successful
+        console.log(text);
+        });
+        //return arr;
+    }
 </script>
+<style>
+    .avatar {
+    vertical-align: middle;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    }
+</style>
 </html>

@@ -4,21 +4,35 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
+    {% if resultado == "vazio" %}
+        <div>
+            <img src="/static/uploads/img_default.png" class="avatar">
+        </div>
+        {% else %}
+        <div>
+            <!-- <img src="{{ url_for('display_image', filename=filename) }}" class="avatar"> -->
+            <img src="data:image/jpeg;base64,{{ foto_perfil }}" class="avatar"/>
+        </div>
+    {% endif %}
     <div class="header">
         <h1 class="word">Entrar Grupo</h1>
     </div>
     <div>
       <ul>
-          <li><a href="{{ url_for('dashboard_usuario', usuario = session.username) }}">Perfil</a></li>
-          <li><a href="news.asp">Feed</a></li>
+          <li><a href="{{ url_for('dashboard_usuario', usuario = session.username) }}">Inicio</a></li>
+          <li><a href="{{ url_for('upload_form') }}">Foto de Perfil</a></li>
           <li><a href="{{ url_for('adicionar_postagens_template', usuario = session.username) }}">Postagens</a></li>
           <li><a href="{{ url_for('procurar_entrar_grupo_template', usuario = session.username) }}">Grupos</a></li>
           <li><a href="{{ url_for('procurar_adicionar_usuarios_template', usuario = session.username) }}">Procurar Usuarios</a></li>
       </ul>
     </div>
     <input id="livebox" name="nome" type="text" placeholder="Insira o nome do grupo"/>
+    <h1>Grupos que não faço parte</h1>
     <p id = "datalist"></p>
-    <button onclick="clickFunction()">Entrar!</button>
+    <button onclick="entrarGrupo()">Entrar!</button>
+    <h1>Grupos que faço parte</h1>
+    <p id = "grupolist"></p>
+    <button onclick="sairGrupo()">Sair!</button>
 </body>
 <script>
     $(document).ready(function(){
@@ -26,7 +40,7 @@
             $("#datalist").empty();
             $.ajax({
                 method:"post",
-                url:"/procurar_grupo_para_entrar",
+                url:"/procurar_grupo",
                 data:{text:$("#livebox").val()},
                 success:function(res){
                     
@@ -42,7 +56,7 @@
             });
         });
     });
-    function clickFunction() {
+    function entrarGrupo() {
         var elements_in = document.getElementsByClassName("list-input");
         var elements_li = document.getElementsByClassName("list-item");
         var arr = [];
@@ -79,5 +93,66 @@
         });
         //return arr;
     }
+    $.ajax({
+        method:"post",
+        url:"/mostrar_grupos",
+        data:{text:$("#grupolist").val()},
+        success:function(res){
+            
+            var data = "<ul>";
+            $.each(res,function(index,value){
+                
+                data += `<li class="list-item-sair" id = "index${index}" data-value="${value}">${value}<input type="checkbox" class="list-input-sair"></li>`;
+                
+            });
+            data += "</ul>";
+            $("#grupolist").html(data);
+        }
+    });
+    function sairGrupo() {
+        var elements_in = document.getElementsByClassName("list-input-sair");
+        var elements_li = document.getElementsByClassName("list-item-sair");
+        var arr = [];
+        var l;
+        for (var i = 0; i < elements_in.length; i++) {
+            if(elements_in[i].checked == true){
+                l = $(elements_li[i]).attr("data-value");
+                arr.push(l);
+            }
+        }
+        fetch('/sair_grupo', {
+
+        // Declare what type of data we're sending
+        headers: {
+        'Content-Type': 'application/json'
+        },
+
+        // Specify the method
+        method: 'POST',
+
+        // A JSON payload
+        body: JSON.stringify({
+            "Grupos": arr
+        })
+        
+        }).then(function (response) { // At this point, Flask has printed our JSON
+            return response.text();
+        }).then(function (text) {
+
+        console.log('POST response: ');
+
+        // // Should be 'OK' if everything was successful
+        console.log(text);
+        });
+        //return arr;
+    }
 </script>
+<style>
+    .avatar {
+    vertical-align: middle;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    }
+</style>
 </html>
