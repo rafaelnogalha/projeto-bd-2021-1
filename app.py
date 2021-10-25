@@ -82,13 +82,11 @@ def login():
                 cursor = mysql.connection.cursor()
                 cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (session['id'], ))
                 foto_perfil = cursor.fetchone()
-                print("FOTO DE PERFIL", foto_perfil)
                 if foto_perfil[0]:
                     result = "contem"
                 else:
                     result = "vazio"
                 session["result"] = result
-                # print("TIPO Coluna:",type(ids_func[0]))
                 lista_funcoes = [] 
                 for linha in ids_func:
                     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -124,6 +122,7 @@ def dashboard_usuario(usuario):
     foto_perfil = cursor.fetchone()  
     
     if foto_perfil[0]:
+        foto_perfil = foto_perfil[0]
         foto_perfil = foto_perfil.decode('utf-8')
         result = "contem"
     else:
@@ -213,13 +212,21 @@ def register():
 @app.route('/criar_grupo/<string:admin>', methods =['GET', 'POST'])
 def criar_grupo(admin):
     msg = ''
+    cursor = mysql.connection.cursor()
+    cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (session['id'], ))
+    foto_perfil = cursor.fetchone()
+    if foto_perfil[0]:
+        foto_perfil = foto_perfil[0]
+        foto_perfil = foto_perfil.decode('utf-8')
+        resultado = "contem"
+    else:
+        resultado = "vazio"
     funcoes = session.get('functions')
     if request.method == 'POST' and 'nome' in request.form:
         nome = request.form['nome']
         cursor = mysql.connection.cursor()
         cursor.execute('SELECT nome FROM grupos WHERE nome = %s', (nome, ))
         nome_e = cursor.fetchone()
-        
         if not nome:
             msg = 'Por favor, preencha o formulário corretamente!'
         elif not re.match(r'[A-Za-z0-9]+', nome):
@@ -233,13 +240,24 @@ def criar_grupo(admin):
             else: 
                msg = 'Este grupo já existe!' 
     elif request.method == 'POST':
+        
         msg = 'Por favor, preencha o formulário corretamente!'
-    return render_template('criar_grupo.html', msg = msg, descricao_funcao = funcoes, admin = admin, resultado = session['result'])
+    return render_template('criar_grupo.html', msg = msg, descricao_funcao = funcoes, admin = admin, resultado= resultado, foto_perfil=foto_perfil)
 
 @app.route('/procurar_editar_grupo_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_editar_grupo_template(admin):
     funcoes = session.get('functions')
-    return render_template('procurar_grupo.html', admin = admin , descricao_funcao = funcoes)
+    id_administrador = session['id']
+    cursor = mysql.connection.cursor()
+    cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_administrador, ))
+    foto_perfil = cursor.fetchone()
+    if foto_perfil[0]:
+        foto_perfil = foto_perfil[0]
+        foto_perfil = foto_perfil.decode('utf-8')
+        resultado = "contem"
+    else:
+        resultado = "vazio"
+    return render_template('procurar_grupo.html', admin = admin , descricao_funcao = funcoes, foto_perfil = foto_perfil, resultado = resultado)
 
 @app.route('/editar_grupo_template', methods =['GET', 'POST'])
 def editar_grupo_template():
@@ -277,7 +295,17 @@ def editar_grupo():
 @app.route('/procurar_deletar_grupo_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_deletar_grupo_template(admin):
     funcoes = session.get('functions')
-    return render_template('deletar_grupo.html', admin = admin , descricao_funcao = funcoes)
+    id_administrador = session['id']
+    cursor = mysql.connection.cursor()
+    cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_administrador, ))
+    foto_perfil = cursor.fetchone()
+    if foto_perfil[0]:
+        foto_perfil = foto_perfil[0]
+        foto_perfil = foto_perfil.decode('utf-8')
+        resultado = "contem"
+    else:
+        resultado = "vazio"
+    return render_template('deletar_grupo.html', admin = admin , descricao_funcao = funcoes, resultado=resultado, foto_perfil=foto_perfil)
 
 @app.route('/deletar_grupo', methods =['GET', 'POST'])
 def deletar_grupo():
@@ -299,12 +327,32 @@ def deletar_grupo():
 @app.route('/procurar_banir_usuario_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_banir_usuario_template(admin):
     funcoes = session.get('functions')
-    return render_template('banir_usuario.html', admin = admin , descricao_funcao = funcoes)
+    id_administrador = session['id']
+    cursor = mysql.connection.cursor()
+    cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_administrador, ))
+    foto_perfil = cursor.fetchone()
+    if foto_perfil[0]:
+        foto_perfil = foto_perfil[0]
+        foto_perfil = foto_perfil.decode('utf-8')
+        resultado = "contem"
+    else:
+        resultado = "vazio"
+    return render_template('banir_usuario.html', admin = admin , descricao_funcao = funcoes, resultado = resultado, foto_perfil = foto_perfil)
 
 @app.route('/procurar_editar_usuario_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_editar_usuario_template(admin):
     funcoes = session.get('functions')
-    return render_template('procurar_usuario.html', admin = admin , descricao_funcao = funcoes)
+    id_administrador = session['id']
+    cursor = mysql.connection.cursor()
+    cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_administrador, ))
+    foto_perfil = cursor.fetchone()
+    if foto_perfil[0]:
+        foto_perfil = foto_perfil[0]
+        foto_perfil = foto_perfil.decode('utf-8')
+        resultado = "contem"
+    else:
+        resultado = "vazio"
+    return render_template('procurar_usuario.html', admin = admin , descricao_funcao = funcoes, resultado = resultado, foto_perfil = foto_perfil)
 
 @app.route('/editar_usuario_template', methods =['GET', 'POST'])
 def editar_usuario_template():
@@ -581,15 +629,15 @@ def adicionar_postagens_administrador_template(admin):
     funcionalidades = session['functions']
     id_administrador = session["id"]
     cursor = mysql.connection.cursor()
-    cursor.execute("SELECT foto_de_perfil FROM administradores where id_administrador = %s", (id_administrador, ))
+    cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_administrador, ))
     foto_perfil = cursor.fetchone()
-    foto_perfil = foto_perfil[0]
-    if foto_perfil:
-        print("AQUI")
-        reultado = 'contem'
+    if foto_perfil[0]:
+        foto_perfil = foto_perfil[0]
+        foto_perfil = foto_perfil.decode('utf-8')
+        resultado = "contem"
     else:
-        reultado = "vazio"
-    return render_template('adicionar_postagens_administrador.html', admin = admin, foto_perfil = foto_perfil, descricao_funcao = funcionalidades, resultado=reultado)
+        resultado = "vazio"
+    return render_template('adicionar_postagens_administrador.html', admin = admin, foto_perfil = foto_perfil, descricao_funcao = funcionalidades, resultado=resultado)
 
 @app.route('/adicionar_postagens_administrador', methods =['GET', 'POST'])
 def adicionar_postagens_administrador():
@@ -660,18 +708,23 @@ def adicionar_postagens():
 
 @app.route('/upload_form')
 def upload_form():
-    id_usuario = session['id']
+    id = session['id']
     cursor = mysql.connection.cursor()
-    cursor.execute("SELECT foto_de_perfil FROM usuarios where id_usuario = %s", (id_usuario, ))
+    if session["system"] == 'usuario':
+        cursor.execute("SELECT foto_de_perfil FROM usuarios where id_usuario = %s", (id, ))
+    else:
+        cursor.execute("SELECT foto_de_perfil FROM administradores where id_administrador = %s", (id, ))
     foto_perfil = cursor.fetchone()
-    # foto_perfil = foto_perfil[0]
-    print("FOTO DE PERFIL", foto_perfil)
     if foto_perfil:
+        foto_perfil = foto_perfil[0]
         foto_perfil = foto_perfil.decode('utf-8')
         result = "contem"
+        print("RESULTADO:", result)
     else:
         result = "vazio"
-    return render_template('upload.html', foto_perfil = foto_perfil, resultado = result)
+        print("RESULTADO:", result)
+    print("session usuario", session["system"])
+    return render_template('upload.html', foto_perfil = foto_perfil, resultado = result, tipo_usuario = session["system"], funcoes = session['functions'])
 
 @app.route('/upload_de_imagem', methods=['POST'])
 def upload_de_imagem():
@@ -698,7 +751,7 @@ def upload_de_imagem():
             cursor.execute("UPDATE administradores SET foto_de_perfil = %s WHERE id_administrador = %s", (encoded_img_data, id))
         mysql.connection.commit()
         flash('Image successfully uploaded and displayed below')
-        return render_template('upload.html', foto_perfil=encoded_img_data.decode('utf-8'), tipo_usuario = tipo_usuario)
+        return render_template('upload.html', foto_perfil=encoded_img_data.decode('utf-8'), tipo_usuario = tipo_usuario, funcoes = session['functions'])
     else:
         flash('Allowed image types are -> png, jpg, jpeg, gif')
         return redirect(request.url)

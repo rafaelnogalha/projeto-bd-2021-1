@@ -5,13 +5,13 @@
     <div>
         <img src="/static/uploads/img_default.png" class="avatar">
     </div>
-    {% else %}
+  {% else %}
       <div>
         <img src="data:image/jpeg;base64,{{ foto_perfil }}" class="avatar">
       </div>
   {% endif %}
   <div>
-    {% if tipo_usuario == "vazio" %}
+    {% if tipo_usuario == "usuario" %}
       <ul>
         <li><a href="{{ url_for('dashboard_usuario', usuario = session.username) }}">Inicio</a></li>
         <li><a href="{{ url_for('upload_form', usuario = session.username) }}">Foto de Perfil</a></li>
@@ -20,7 +20,16 @@
         <li><a href="{{ url_for('procurar_adicionar_usuarios_template', usuario = session.username) }}">Procurar Usuarios</a></li>
       </ul>
     {% else %}
-      {% for item in descricao_funcao %}
+      <li><a href="{{ url_for('dashboard_admin', admin = session.username) }}">
+          Inicio
+      </a></li>
+      <li><a href="{{ url_for('upload_form', admin = session.username) }}">
+          Foto de Perfil
+      </a></li>
+      <li><a href="{{ url_for('adicionar_postagens_administrador_template', admin = session.username) }}">
+        Postagens
+      </a></li>
+      {% for item in funcoes %}
         {% if item == "Criar Grupos" %}
             <li><a href="{{ url_for('criar_grupo', admin = session.username) }}">
                 {{ item }}

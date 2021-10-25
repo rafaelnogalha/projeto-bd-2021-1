@@ -14,7 +14,6 @@
     </div>
     {% else %}
     <div>
-        <!-- <img src="{{ url_for('display_image', filename=filename) }}" class="avatar"> -->
         <img src="data:image/jpeg;base64,{{ foto_perfil }}" class="avatar"/>
     </div>
     {% endif %}
@@ -23,6 +22,9 @@
     </a></li>
     <li><a href="{{ url_for('adicionar_postagens_administrador', admin = session.username) }}">
         Postagens
+    </a></li>
+    <li><a href="{{ url_for('upload_form', admin = session.username) }}">
+        Foto de Perfil
     </a></li>
     {% for item in descricao_funcao %}
         {% if item == "Criar Grupos" %}

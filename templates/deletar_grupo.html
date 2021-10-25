@@ -24,6 +24,9 @@
     <li><a href="{{ url_for('adicionar_postagens_administrador', admin = session.username) }}">
         Postagens
     </a></li>
+    <li><a href="{{ url_for('upload_form', admin = session.username) }}">
+        Foto de Perfil
+    </a></li>
     {% for item in descricao_funcao %}
         {% if item == "Criar Grupos" %}
             <li><a href="{{ url_for('criar_grupo', admin = session.username) }}">
