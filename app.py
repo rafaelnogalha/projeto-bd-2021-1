@@ -1,9 +1,9 @@
 # Store this code in 'app.py' file
 import os
 from flask import Flask, flash, render_template, request, redirect, url_for, session, jsonify
+import mysql.connector as myconnect
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
-from flask_login import login_required
 from database import criar_bd_tabelas, preencher_bd_tabelas
 from werkzeug.utils import secure_filename
 import re
@@ -14,13 +14,23 @@ from PIL import Image
 # criar_bd_tabelas()
 # preencher_bd_tabelas()
 
+cnx = myconnect.connect(
+    host="127.0.0.1",
+    port=3306,
+    user="admin",
+    password="L@g0n1c0",
+    auth_plugin='mysql_native_password',
+    database='rede_social')
+
+cur = cnx.cursor()
+
 app = Flask(__name__)
   
 app.secret_key = 'your secret key'
   
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'admin'
-app.config['MYSQL_PASSWORD'] = '12345678'
+app.config['MYSQL_PASSWORD'] = 'L@g0n1c0'
 app.config['MYSQL_DB'] = 'rede_social'
 
 # Permitindo upload de imagens
@@ -66,7 +76,6 @@ def login():
                 cursor = mysql.connection.cursor()
                 cursor.execute('SELECT foto_de_perfil FROM usuarios where id_usuario = %s', (session['id'], ))
                 foto_perfil = cursor.fetchone()
-                print("FOTO DE PERFIL", foto_perfil)
                 if foto_perfil[0]:
                     result = "contem"
                 else:
@@ -93,23 +102,18 @@ def login():
                     values_view = linha.values()
                     value_iterator = iter(values_view)
                     first_value = next(value_iterator)
-                    # print("IDS0:", first_value)
-                    # print("IDS0:", type(first_value))
+                   
                     cursor.execute('SELECT descricao FROM funcoes WHERE id_funcao = %s', (first_value, ))
                     descricao_funcao = cursor.fetchone();
-                    print("descricao_funcao:", descricao_funcao)
-                    print("TIPO_desc:", type(descricao_funcao))
+                    
                     desc = descricao_funcao.get("descricao")
-                    # for desc1 in descricao_funcao:
-                    #     print("desc:", desc1[9])
-                    #     print("TIPO_descasdasdasd:", type(desc1[9]))
+             
                         
                     lista_funcoes.append(desc)
                     session['functions'] = lista_funcoes
                 
-                #return render_template('administrador.html', msg = msg, descricao_funcao = lista_funcoes)
+                
                 return redirect(url_for('dashboard_admin', admin = session['username']))
-            # return render_template('index.html', msg = msg, system = system)
         else:
             msg = 'Nome / senha incorreto(s) !'
     return render_template('login.html', msg = msg)
@@ -136,7 +140,6 @@ def dashboard_admin(admin):
     cursor = mysql.connection.cursor()
     cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_admin, ))
     foto_perfil = cursor.fetchone()
-    print("FOTO DE PERFIL", foto_perfil)
     if foto_perfil[0]:
         foto_perfil = foto_perfil[0]
         foto_perfil = foto_perfil.decode('utf-8')
@@ -178,13 +181,20 @@ def register():
             msg = 'Por favor, preencha o formulário corretamente!'
         else:
             if(tipo_especialidade == 'usuario'):
-                sql = ("INSERT INTO usuarios(nome, senha, email) VALUES (%s, %s, %s)")
-                cursor.execute(sql, (nome, senha, email))
-                mysql.connection.commit()
+                cursor.execute("SELECT email FROM banidos WHERE email = %s", [email, ])
+                banido = cursor.fetchone()
+                if banido == None:
+                    sql = ("INSERT INTO usuarios(nome, senha, email) VALUES (%s, %s, %s)")
+                    cursor.execute(sql, (nome, senha, email))
+                    mysql.connection.commit()
+                    msg = 'Usuário registrado com sucesso!'
+                else:
+                    msg = 'O usuário com este email foi banido, tente com outro!'
             else:
                 sql = ("INSERT INTO administradores(nome, senha, email) VALUES (%s, %s, %s)")
                 cursor.execute(sql, (nome, senha, email))
                 mysql.connection.commit()
+                msg = 'Administrador registrado com sucesso!'
                 for key,val in request.form.items():
                   if key.startswith("funcao_"):
                     funcao = key.replace('funcao_', '')
@@ -200,10 +210,6 @@ def register():
                     id_admin = next(value_iterator)
                     cursor.execute("INSERT INTO funcoes_administradores(id_funcao, id_administrador) VALUES(%s, %s)", (id_func, id_admin, ))    
                     mysql.connection.commit()
-            if(tipo_especialidade == 'usuario'):
-                msg = 'Usuário registrado com sucesso!'
-            else:
-                msg = 'Administrador registrado com sucesso!'
     elif request.method == 'POST':
         msg = 'Por favor, preencha o formulário corretamente!'
     return render_template('register.html', msg = msg)
@@ -244,6 +250,44 @@ def criar_grupo(admin):
         msg = 'Por favor, preencha o formulário corretamente!'
     return render_template('criar_grupo.html', msg = msg, descricao_funcao = funcoes, admin = admin, resultado= resultado, foto_perfil=foto_perfil)
 
+
+## VIEW E PROCEDURE VISUALIZAR ADMINISTRADORES ##
+@app.route('/listar_administradores/<string:admin>', methods =['GET', 'POST'])
+def listar_administradores(admin):
+    funcoes = session.get('functions')
+    id_administrador = session['id']
+    cur.callproc('count_administradores', )
+    radmin = []
+    for result in cur.stored_results():
+        radmin.append(result.fetchall())
+    countadmin = radmin[1][0]
+    countadmin = countadmin[0]
+    cursor = mysql.connection.cursor()
+    cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_administrador, ))
+    foto_perfil = cursor.fetchone()
+    if foto_perfil[0]:
+        foto_perfil = foto_perfil[0]
+        foto_perfil = foto_perfil.decode('utf-8')
+        resultado = "contem"
+    else:
+        resultado = "vazio"
+    cursor.execute('SELECT * FROM view_administradores')
+    administradores = cursor.fetchall()
+    administradores_array = []
+    fotos_administradores_array = []
+    i = 0
+    j = 2
+    for adm in administradores:
+        foto_admin = administradores[i][j]
+        if foto_admin != None:
+            foto_admin = foto_admin.decode('utf-8')
+        fotos_administradores_array.append(foto_admin)
+        administradores_array.append(adm)
+        i = i + 1
+    return render_template('listar_administradores.html', admin = admin, descricao_funcao = funcoes, foto_perfil = foto_perfil, resultado = resultado, administradores_array = administradores_array, foto_admins = fotos_administradores_array, count_administradores = countadmin)
+
+## EDITAR GRUPOS ##
+
 @app.route('/procurar_editar_grupo_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_editar_grupo_template(admin):
     funcoes = session.get('functions')
@@ -268,7 +312,6 @@ def editar_grupo_template():
         grupos = request.get_json()
         for linha in grupos.items():
             arr = linha[1]
-        print(arr)
         return render_template('editar_grupo.html', msg = msg, grupo = arr, descricao_funcao = funcoes)
 
 @app.route('/editar_grupo', methods =['GET', 'POST'])
@@ -283,7 +326,6 @@ def editar_grupo():
         cursor.execute('SELECT nome FROM grupos WHERE nome = %s', (nome, ))
         result = cursor.fetchone()
         if (result == None):
-            print("Foi")
             cursor.execute("UPDATE grupos SET nome = %s WHERE nome = %s", (nome, grupo_nome, ))
             mysql.connection.commit()
             msg = 'nome do grupo alterado com sucesso!'
@@ -359,31 +401,61 @@ def editar_usuario_template():
     # POST request
     msg = ''
     funcoes = session.get('functions')
+    cursor = mysql.connection.cursor()
     if request.method == 'POST':
         usuarios = request.get_json()
         for linha in usuarios.items():
-            arr = linha[1]
-        print(arr)
-        return render_template('editar_usuario.html', msg = msg, usuario = arr, descricao_funcao = funcoes)
+            nome_usuario = linha[1]
+        arr_usuario = []
+        arr_usuario.append(nome_usuario)
+        cursor.execute('SELECT id_usuario, email, senha FROM usuarios WHERE nome = %s', (nome_usuario, ))
+        result = cursor.fetchone()
+        for linha in result:
+            arr_usuario.append(linha)
+        return render_template('editar_usuario.html', msg = msg, usuario = arr_usuario, descricao_funcao = funcoes)
     
 @app.route('/editar_usuario', methods =['GET', 'POST'])
 def editar_usuario():
     # POST request
     msg = ''
+    id_admin = session['id']
     funcoes = session.get('functions')
     if request.method == 'POST' and 'nome' in request.form:
         nome = request.form['nome']
-        usuario_nome = request.form['usuario']
+        senha = request.form['senha']
+        email = request.form['email']
+        nomeAtual = request.form['nomeAtual']
+        senhaAtual = request.form['senhaAtual']
+        emailAtual = request.form['emailAtual']
+        usuario_nome = request.form['nomeAtual']
         cursor = mysql.connection.cursor()
-        cursor.execute('SELECT nome FROM usuarios WHERE nome = %s', (nome, ))
-        result = cursor.fetchone()
-        if (result == None):
-            cursor.execute("UPDATE usuarios SET nome = %s WHERE nome = %s", (nome, usuario_nome, ))
-            mysql.connection.commit()
-            msg = 'nome do usuario alterado com sucesso!'
+        cursor.execute('SELECT id_usuario FROM usuarios WHERE nome = %s OR email = %s', (nome, email, ))
+        id_usuario = cursor.fetchone()
+        cursor.execute("SELECT foto_de_perfil FROM administradores where id_administrador = %s", (id_admin, ))
+        foto_perfil = cursor.fetchone()
+        foto_perfil = foto_perfil[0]
+        if foto_perfil:
+            foto_perfil = foto_perfil.decode('utf-8')
+            result = "contem"
         else:
-            msg = 'Esse nome para usuario já existe. Tente outro'
-    return render_template('procurar_usuario.html', msg = msg, descricao_funcao = funcoes)
+            result = "vazio"
+        if (id_usuario == None):
+            if nome == "":
+                nome = nomeAtual
+            if senha == "":
+                senha = senhaAtual
+            if email == "":
+                email = emailAtual
+            cursor.execute("UPDATE usuarios SET nome = %s, email = %s, senha = %s WHERE nome = %s", (nome, email, senha, usuario_nome, ))
+            mysql.connection.commit()
+            cursor.execute('SELECT id_usuario FROM usuarios WHERE nome = %s', (nome, ))
+            id_usuario = cursor.fetchone()
+            cursor.execute("INSERT INTO editados(id_administrador, id_usuario) VALUES (%s, %s)", (id_admin, id_usuario))
+            mysql.connection.commit()
+            msg = 'As informações do usuario foram alteradas com sucesso!'
+        else:
+            msg = 'Esse nome ou email para usuario já existe. Tente outro'
+    return render_template('procurar_usuario.html', msg = msg, descricao_funcao = funcoes, resultado = result, foto_perfil = foto_perfil)
 
 @app.route('/banir_usuario', methods =['GET', 'POST'])
 def banir_usuario():
@@ -395,18 +467,18 @@ def banir_usuario():
         cursor = mysql.connection.cursor()
         for linha in usuarios.items():
             arr = linha[1]
+            
         for item in arr:
             cursor.execute("SELECT email FROM usuarios where nome = %s", (item, ))
             email_usuario = cursor.fetchone()
-            value_iterator_email = iter(email_usuario)
-            email_usuario = next(value_iterator_email)
-            cursor.execute("INSERT INTO banidos(id_administrador, email) VALUES (%s, %s)", (id_admin, email_usuario))
-            mysql.connection.commit()
-            print("ID ADMIN",type(id_admin))
             sql = ("DELETE FROM usuarios WHERE nome = %s")
             cursor.execute(sql, (item, ))
             mysql.connection.commit()
-            msg = 'Usuário(s) banido(s) com sucesso!'
+            cursor.execute("INSERT INTO banidos(id_administrador, email) VALUES (%s, %s)", (id_admin, email_usuario))
+            mysql.connection.commit()
+            #msg = 'Usuário(s) banido(s) com sucesso!'
+        # for item in arr:
+        #     msg = 'Usuário(s) banido(s) com sucesso!'
         #return 'Sucesss', 200
     return render_template('banir_usuario.html', msg = msg) and 'Sucesss', 200
         
@@ -437,20 +509,18 @@ def entrar_grupo():
         for item in arr:
             cursor.execute("SELECT id_grupo FROM grupos_usuarios where id_usuario = %s ", (id_usuario, ))
             ids_grupo_existe = cursor.fetchall()
-            print("IDS GRUPOS:", ids_grupo_existe)
             cursor.execute("SELECT id_grupo FROM grupos where nome = %s", (item, ))
             id_grupo = cursor.fetchone()
             value_iterator_id = iter(id_grupo)
             id_grupo = next(value_iterator_id)
-            print("ID GRUPO:", id_grupo)
             flag = 0
             for i in ids_grupo_existe:
-                print("IS:", i[0])
+                
                 if i[0] == id_grupo:
-                    print("Não pode!")
+                    
                     msg = 'Usuário já faz parte do grupo!'
                     flag = 1
-                    print("PODE!")
+                    
             if flag == 0:
                 cursor.execute("INSERT INTO grupos_usuarios(id_grupo, id_usuario) VALUES (%s, %s)", (id_grupo, id_usuario))
                 mysql.connection.commit()
@@ -507,7 +577,7 @@ def mostrar_grupos():
     result_grupos = cursor.fetchall()
     u = []
     for grupo in result_grupos:
-        print(type(grupo))
+        
         cursor.execute("SELECT nome FROM grupos where id_grupo = %s", (grupo, ))
         nome = cursor.fetchone()
         u.append(nome)
@@ -571,6 +641,16 @@ def desfazer_amizade():
         #return 'Sucesss', 200
     return render_template('procurar_adicionar_usuario.html', msg = msg)
 
+
+@app.route('/procurar_banir_usuario', methods =['GET', 'POST'])
+def procurar_banir_usuario():
+    id_usuario1 = session['id']
+    searchbox = "%" + request.values.get("text") + "%"
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT nome FROM usuarios where nome Like %s order by nome", (searchbox, ))
+    result = cursor.fetchall()
+    return jsonify(result)
+
 @app.route('/procurar_usuario', methods =['GET', 'POST'])
 def procurar_usuario():
     id_usuario1 = session['id']
@@ -597,7 +677,7 @@ def mostrar_amigos():
     result_amigos = cursor.fetchall()
     u = []
     for user in result_amigos:
-        print(type(user))
+      
         cursor.execute("SELECT nome FROM usuarios where id_usuario = %s", (user, ))
         nome = cursor.fetchone()
         u.append(nome)
@@ -608,13 +688,14 @@ def mostrar_amigos():
 @app.route('/procurar_postagem_administrador', methods =['GET', 'POST'])
 def procurar_postagem_administrador():
     cursor = mysql.connection.cursor()
-    cursor.execute("SELECT descricao FROM postagens_administradores order by criado")
+    # criado
+    cursor.execute("SELECT descricao FROM postagens_administradores order by id_postagens_administradores")
     result_postagem = cursor.fetchall()
-    cursor.execute("SELECT id_administrador FROM postagens_administradores order by criado")
+    cursor.execute("SELECT id_administrador FROM postagens_administradores order by id_postagens_administradores")
     result_administrador = cursor.fetchall()
     u = []
     for user in result_administrador:
-        print(type(user))
+    
         cursor.execute("SELECT nome FROM administradores where id_administrador = %s", (user, ))
         nome = cursor.fetchall()
         u.append(nome)
@@ -642,6 +723,17 @@ def adicionar_postagens_administrador_template(admin):
 @app.route('/adicionar_postagens_administrador', methods =['GET', 'POST'])
 def adicionar_postagens_administrador():
     msg = ''  
+    funcionalidades = session['functions']
+    id_administrador = session["id"]
+    cursor = mysql.connection.cursor()
+    cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_administrador, ))
+    foto_perfil = cursor.fetchone()
+    if foto_perfil[0]:
+        foto_perfil = foto_perfil[0]
+        foto_perfil = foto_perfil.decode('utf-8')
+        resultado = "contem"
+    else:
+        resultado = "vazio"
     if request.method == 'POST' and 'descricao' in request.form:
         descricao = request.form['descricao']
         cursor = mysql.connection.cursor()
@@ -651,20 +743,21 @@ def adicionar_postagens_administrador():
         msg = 'Postagem adicionada com sucesso'
     elif request.method == 'POST':
         msg = 'Por favor, não poste nada em branco!'
-    return render_template('adicionar_postagens_administrador.html', msg = mostrar_amigos)
+    return render_template('adicionar_postagens_administrador.html', msg = msg, foto_perfil = foto_perfil, descricao_funcao = funcionalidades, resultado=resultado)
 
 ## Postagens_usuarios ##
 
 @app.route('/procurar_postagem', methods =['GET', 'POST'])
 def procurar_postagem():
     cursor = mysql.connection.cursor()
-    cursor.execute("SELECT descricao FROM postagens_usuarios order by criado")
+    # criado
+    cursor.execute("SELECT descricao FROM postagens_usuarios order by id_postagens_usuarios")
     result_postagem = cursor.fetchall()
-    cursor.execute("SELECT id_usuario FROM postagens_usuarios order by criado")
+    cursor.execute("SELECT id_usuario FROM postagens_usuarios order by id_postagens_usuarios")
     result_usuario = cursor.fetchall()
     u = []
     for user in result_usuario:
-        print(type(user))
+     
         cursor.execute("SELECT nome FROM usuarios where id_usuario = %s", (user, ))
         nome = cursor.fetchall()
         u.append(nome)
@@ -691,6 +784,16 @@ def adicionar_postagens_template(usuario):
 @app.route('/adicionar_postagens', methods =['GET', 'POST'])
 def adicionar_postagens():
     msg = ''
+    id_usuario = session['id']
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT foto_de_perfil FROM usuarios where id_usuario = %s", (id_usuario, ))
+    foto_perfil = cursor.fetchone()
+    foto_perfil = foto_perfil[0]
+    if foto_perfil:
+        foto_perfil = foto_perfil.decode('utf-8')
+        result = "contem"
+    else:
+        result = "vazio"
     if request.method == 'POST' and 'descricao' in request.form:
         descricao = request.form['descricao']
         cursor = mysql.connection.cursor()
@@ -700,7 +803,7 @@ def adicionar_postagens():
         msg = 'Postagem adicionada com sucesso'
     elif request.method == 'POST':
         msg = 'Por favor, não poste nada em branco!'
-    return render_template('adicionar_postagens.html', msg = msg)
+    return render_template('adicionar_postagens.html', msg = msg, resultado = result, foto_perfil = foto_perfil)
 
 
 
@@ -715,15 +818,13 @@ def upload_form():
     else:
         cursor.execute("SELECT foto_de_perfil FROM administradores where id_administrador = %s", (id, ))
     foto_perfil = cursor.fetchone()
-    if foto_perfil:
+    if foto_perfil[0]:
         foto_perfil = foto_perfil[0]
         foto_perfil = foto_perfil.decode('utf-8')
         result = "contem"
-        print("RESULTADO:", result)
+      
     else:
         result = "vazio"
-        print("RESULTADO:", result)
-    print("session usuario", session["system"])
     return render_template('upload.html', foto_perfil = foto_perfil, resultado = result, tipo_usuario = session["system"], funcoes = session['functions'])
 
 @app.route('/upload_de_imagem', methods=['POST'])

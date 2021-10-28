@@ -52,13 +52,13 @@
     <h2 class="word">
       <form action="{{ url_for('editar_usuario') }}" method="post">
         <div class="msg">{{msg}}</div>
-          <input id = "editar" name="nome" type="text" placeholder="Insira o novo nome do usuário"></br></br>
-          <!-- <input id = "editar" name="senha" type="text" placeholder="Insira a nova senha do usuário"></br></br>
-          <input id = "editar" name="email" type="text" placeholder="Insira o novo email do usuário"></br></br> -->
-          <input id = "editar" name ="usuario" value="{{usuario}}" type="text" readonly="readonly"></br></br>
-          <!-- <input id = "editar" name ="usuario" value="{{usuario}}" type="text" readonly="readonly"></br></br>
-          <input id = "editar" name ="usuario" value="{{usuario}}" type="text" readonly="readonly"></br></br> -->
-          <input type="submit" class="btn" value="Editar"></br></br>
+            <input id = "editar1" name="nome" type="text" placeholder="Insira o novo nome do usuário"></br></br>
+            <input id = "editar2" name="senha" type="text" placeholder="Insira a nova senha do usuário"></br></br>
+            <input id = "editar3" name="email" type="text" placeholder="Insira o novo email do usuário"></br></br>
+            <input id = "editar4" name ="nomeAtual" value="{{usuario.0}}" type="text" readonly="readonly"></br></br>
+            <input id = "editar5" name ="senhaAtual" value="{{usuario.3}}" type="text" readonly="readonly"></br></br>
+            <input id = "editar6" name ="emailAtual" value="{{usuario.2}}" type="text" readonly="readonly"></br></br>
+            <input type="submit" class="btn" value="Editar"></br></br>
       </form>
     </h2>
     

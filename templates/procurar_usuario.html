@@ -50,6 +50,7 @@
             </a></li>
         {% endif %}
     {% endfor %}
+    <p>{{msg}}</p>
     <input id="livebox" name="nome" type="text" placeholder="Insira o nome do usuário"/>
     <p id = "datalist"></p>
     <button onclick="clickFunction()">Editar</button>
@@ -102,7 +103,7 @@
 
         // A JSON payload
         body: JSON.stringify({
-            "Grupo a ser editado": l
+            "Usuario a ser editado": l
         })
         
         }).then(function (response) { // At this point, Flask has printed our JSON

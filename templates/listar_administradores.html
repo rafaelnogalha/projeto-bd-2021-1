@@ -24,10 +24,6 @@
             <li><a href="{{ url_for('upload_form', admin = session.username) }}">
                 Foto de Perfil
             </a></li>
-            <li><a href="{{ url_for('listar_administradores', admin = session.username) }}">
-                Listar Administradores
-            </a></li>
-            
             {% for item in descricao_funcao %}
                 {% if item == "Criar Grupos" %}
                     <li><a href="{{ url_for('criar_grupo', admin = session.username) }}">
@@ -52,23 +48,22 @@
                 {% endif %}
             {% endfor %}
         </ul>
-        <!-- <li><a href="news.asp">Criar Grupo</a></li>
-        <li><a href="contact.asp">Deletar Grupo</a></li>
-        <li><a href="about.asp">Editar Grupo</a></li>
-        <li><a href="about.asp">Banir Usuario</a></li> -->
     </br></br></br></br></br>
-        <div align="center">
-          <div align="center" class="border">
-            <div class="header">
-                <h1 class="word">Administrador</h1>
-            </div></br></br></br>
-            <!-- <div class="descricao_funcao">{{ descricao_funcao }}</div> -->
-                <h1 class="bottom">
-                    Hi {{ session.username }}!!</br></br> Seja bem-vindo a página de administrador
-                </h1></br></br></br>
-                <a href="{{ url_for('logout') }}" class="btn">Logout</a>
-          </div>
-        </div>
+      <table>
+        <tr>
+          <!-- <th>Foto de Perfil</th> -->
+          <th>Nome</th>
+          <th>Email</th>
+        </tr>
+        {% for admin in administradores_array %}
+          <tr>
+            <td>{{admin[0]}}</td>
+            <td>{{admin[1]}}</td>
+          </tr>
+        {% endfor %}
+        
+      </table> 
+      <tr>Total de Administradores: {{count_administradores}}</tr>
     </body>
 
     <style>
@@ -77,6 +72,21 @@
         width: 50px;
         height: 50px;
         border-radius: 50%;
+        }
+        table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+        }
+
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+        }
+
+        tr:nth-child(even) {
+          background-color: #dddddd;
         }
     </style>
     
