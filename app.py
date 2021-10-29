@@ -4,8 +4,6 @@ from flask import Flask, flash, render_template, request, redirect, url_for, ses
 import mysql.connector as myconnect
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
-from database import criar_bd_tabelas, preencher_bd_tabelas
-from werkzeug.utils import secure_filename
 import re
 import io 
 import base64

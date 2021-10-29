@@ -5,6 +5,13 @@
   background-color: #236B8E; 
 }
 
+.header-title{
+  padding: 5px 120px;
+  width: 150px;
+  height: 100px;
+  background-color: #236B8E; 
+}
+
 .border{
   padding: 80px 50px;
   width: 400px;

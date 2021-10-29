@@ -3,8 +3,6 @@ import mysql.connector as mysql
 
 def criar_bd_tabelas():
   
-  
-  
   db = mysql.connect(
     host = "localhost",
     user = "admin",
@@ -17,11 +15,7 @@ def criar_bd_tabelas():
 
   cursor.execute("CREATE DATABASE if not exists rede_social")
   print('banco de dados criado')
-  # cursor.execute("SHOW DATABASES LIKE 'rede_social'")
-  # database = cursor.fetchone() 
-  
-  # print(database)
-  
+
   db = mysql.connect(
     host = "localhost",
     user = "admin",
@@ -66,7 +60,6 @@ def preencher_bd_tabelas():
     ('Ruben','senharuben','ruben@gmail.com'),
   ]
   cursor.executemany(sql, val)
-  print("inserido em administradores")
   sql = "INSERT INTO usuarios (nome, senha, email) VALUES (%s, %s, %s)"
   val = [
     ('Carlos','senhacarlos','carlos@gmail.com'),
@@ -76,7 +69,6 @@ def preencher_bd_tabelas():
     ('Rita','senharita','rita@gmail.com'),
   ]
   cursor.executemany(sql, val)
-  print("inserido em usuarios")
   cursor.execute("INSERT INTO grupos (nome) VALUES ('Alunos')")
   cursor.execute("INSERT INTO grupos (nome) VALUES ('Professores')")
   cursor.execute("INSERT INTO grupos (nome) VALUES ('Solteiros')")
@@ -159,5 +151,6 @@ def main():
   # cursor.execute(sql)
   criar_bd_tabelas()
   preencher_bd_tabelas()
+  print("Dados inseridos em rede_social")
 if __name__ == "__main__":
   main()
