@@ -11,8 +11,6 @@ import io
 import base64
 from PIL import Image
 
-# criar_bd_tabelas()
-# preencher_bd_tabelas()
 
 cnx = myconnect.connect(
     host="127.0.0.1",
@@ -40,10 +38,8 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
     
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])  
   
-  
 mysql = MySQL(app)
 
-# funcao que pega a extensao da imagem
 def allowed_file(filename):
    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -274,17 +270,9 @@ def listar_administradores(admin):
     cursor.execute('SELECT * FROM view_administradores')
     administradores = cursor.fetchall()
     administradores_array = []
-    fotos_administradores_array = []
-    i = 0
-    j = 2
     for adm in administradores:
-        foto_admin = administradores[i][j]
-        if foto_admin != None:
-            foto_admin = foto_admin.decode('utf-8')
-        fotos_administradores_array.append(foto_admin)
         administradores_array.append(adm)
-        i = i + 1
-    return render_template('listar_administradores.html', admin = admin, descricao_funcao = funcoes, foto_perfil = foto_perfil, resultado = resultado, administradores_array = administradores_array, foto_admins = fotos_administradores_array, count_administradores = countadmin)
+    return render_template('listar_administradores.html', admin = admin, descricao_funcao = funcoes, foto_perfil = foto_perfil, resultado = resultado, administradores_array = administradores_array, count_administradores = countadmin)
 
 ## EDITAR GRUPOS ##
 
@@ -835,7 +823,7 @@ def upload_de_imagem():
         return redirect(request.url)
     file = request.files['file']
     if file.filename == '':
-        flash('No image selected for uploading')
+        flash('Nenhuma imagem foi selecionada')
         return redirect(request.url)
     if file and allowed_file(file.filename):
         text, file_extension = os.path.splitext(file.filename)
@@ -851,7 +839,7 @@ def upload_de_imagem():
         else:
             cursor.execute("UPDATE administradores SET foto_de_perfil = %s WHERE id_administrador = %s", (encoded_img_data, id))
         mysql.connection.commit()
-        flash('Image successfully uploaded and displayed below')
+        flash('A imagem foi alterada com sucesso')
         return render_template('upload.html', foto_perfil=encoded_img_data.decode('utf-8'), tipo_usuario = tipo_usuario, funcoes = session['functions'])
     else:
         flash('Allowed image types are -> png, jpg, jpeg, gif')

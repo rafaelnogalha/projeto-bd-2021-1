@@ -43,7 +43,7 @@ def criar_bd_tabelas():
   cursor.execute("CREATE TABLE IF NOT EXISTS funcoes_administradores(id_funcao_administrador int(11) NOT NULL AUTO_INCREMENT,id_funcao int(11) NOT NULL,id_administrador int(11) NOT NULL,PRIMARY KEY (id_funcao_administrador),CONSTRAINT funcoes_fk_1 FOREIGN KEY (id_administrador)REFERENCES administradores (id_administrador) ON DELETE CASCADE,CONSTRAINT funcoes_fk_2 FOREIGN KEY (id_funcao)REFERENCES funcoes (id_funcao) ON DELETE CASCADE)")
   cursor.execute("CREATE TABLE IF NOT EXISTS postagens_usuarios(id_postagens_usuarios int(11) NOT NULL AUTO_INCREMENT,id_usuario int(11) NOT NULL,descricao varchar(255) NOT NULL,PRIMARY KEY (id_postagens_usuarios),CONSTRAINT postagens_usuarios_fk FOREIGN KEY (id_usuario)REFERENCES usuarios (id_usuario) ON DELETE CASCADE)")
   cursor.execute("CREATE TABLE IF NOT EXISTS postagens_administradores(id_postagens_administradores int(11) NOT NULL AUTO_INCREMENT,id_administrador int(11) NOT NULL,descricao varchar(255) NOT NULL,PRIMARY KEY (id_postagens_administradores),CONSTRAINT postagens_administradores_fk FOREIGN KEY (id_administrador)REFERENCES administradores (id_administrador) ON DELETE CASCADE)")  
-  cursor.execute("CREATE OR REPLACE VIEW view_administradores(nome,email,foto_de_perfil) AS SELECT nome,email,foto_de_perfil from administradores")
+  cursor.execute("CREATE OR REPLACE VIEW view_administradores(nome,email) AS SELECT nome,email from administradores")
   cursor.execute("CREATE PROCEDURE count_administradores() BEGIN SELECT * FROM administradores; SELECT COUNT(id_administrador) AS total_admins FROM administradores; END")
   
 def preencher_bd_tabelas():
