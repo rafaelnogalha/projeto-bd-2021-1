@@ -250,7 +250,7 @@ def criar_grupo(admin):
         msg = 'Por favor, preencha o formulário corretamente!'
     return render_template('criar_grupo.html', msg = msg, descricao_funcao = funcoes, admin = admin, resultado= resultado, foto_perfil=foto_perfil)
 
-
+# view_procedure
 # Lista administradores da aplicacao(view) e mostra a quantidade de administradores(procedure)
 @app.route('/listar_administradores/<string:admin>', methods =['GET', 'POST'])
 def listar_administradores(admin):
