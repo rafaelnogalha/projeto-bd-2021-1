@@ -2,7 +2,7 @@
 
 <p> Para executar o programa, primeiro é necessário inserir dados iniciais no banco, para isso execute
 
-`python3 main.py`
+`python3 database.py`
 
 <p> E para executar a aplicação, basta inserir no prompt de comando os seguintes scripts: </p>
 
