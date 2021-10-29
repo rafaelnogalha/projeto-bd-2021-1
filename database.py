@@ -11,7 +11,7 @@ def criar_bd_tabelas():
   )
 
   cursor = db.cursor()
-  cursor.execute("DROP DATABASE rede_social")
+  # cursor.execute("DROP DATABASE rede_social")
 
   cursor.execute("CREATE DATABASE if not exists rede_social")
   print('banco de dados criado')
