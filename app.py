@@ -31,7 +31,6 @@ app.config['MYSQL_USER'] = 'admin'
 app.config['MYSQL_PASSWORD'] = 'L@g0n1c0'
 app.config['MYSQL_DB'] = 'rede_social'
 
-# Permitindo upload de imagens
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -40,12 +39,16 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
   
 mysql = MySQL(app)
 
+# Permitindo upload de imagens
 def allowed_file(filename):
    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# Redireciona o usuario/administrador para seus respectivos dashboards, 
+# alem de inserir cookies para armazenar informacoes importantes
 @app.route('/')
 @app.route('/login', methods =['GET', 'POST'])
 def login():
+    """Função que permite o login do usuário ou do administrador"""
     msg = ''
     if request.method == 'POST' and 'nome' in request.form and 'senha' in request.form:
         nome = request.form['nome']
@@ -58,7 +61,6 @@ def login():
         else:
             cursor.execute('SELECT * FROM administradores WHERE nome = %s AND senha = %s', [nome, senha])
             system = "administrador"
-            #role = cursor.fetchone()
         account = cursor.fetchone()
         
         if account:
@@ -77,7 +79,6 @@ def login():
                 else:
                     result = "vazio"
                 session["result"] = result
-                #return render_template('usuario.html', msg = msg)
                 return redirect(url_for('dashboard_usuario', usuario = session['username']))
             else:
                 session["system"] = system
@@ -103,11 +104,9 @@ def login():
                     descricao_funcao = cursor.fetchone();
                     
                     desc = descricao_funcao.get("descricao")
-             
-                        
+                 
                     lista_funcoes.append(desc)
                     session['functions'] = lista_funcoes
-                
                 
                 return redirect(url_for('dashboard_admin', admin = session['username']))
         else:
@@ -116,6 +115,7 @@ def login():
 
 @app.route('/dashboard_usuario/<string:usuario>', methods=['GET', 'POST'])
 def dashboard_usuario(usuario):
+    """Função que renderiza o html do usuario, recebe como parametro o nome do usuario"""
     id_usuario = session['id']
     cursor = mysql.connection.cursor()
     cursor.execute('SELECT foto_de_perfil FROM usuarios where id_usuario = %s', (id_usuario, ))
@@ -131,6 +131,7 @@ def dashboard_usuario(usuario):
 
 @app.route('/dashboard_admin/<string:admin>', methods=['GET', 'POST'])
 def dashboard_admin(admin):
+    """Função que renderiza o html do administrador, recebe como parametro o nome do administrador"""
     lista_funcoes = session.get('functions')
     id_admin = session['id']
     cursor = mysql.connection.cursor()
@@ -146,13 +147,17 @@ def dashboard_admin(admin):
 
 @app.route('/logout')
 def logout():
+    """Logout da aplicação"""
     session.pop('loggedin', None)
     session.pop('id', None)
     session.pop('username', None)
     return redirect(url_for('login'))
-  
+
+# Verifica se o nome e/ou email sao repetidos tanto para usuarios como para administradores
+# Verifica se o email foi banido para usuarios
 @app.route('/register', methods =['GET', 'POST'])
 def register():
+    """Sign up da aplicação"""
     msg = ''
     if request.method == 'POST' and 'nome' in request.form and 'senha' in request.form and 'email' in request.form :
         nome = request.form['nome']
@@ -210,9 +215,10 @@ def register():
         msg = 'Por favor, preencha o formulário corretamente!'
     return render_template('register.html', msg = msg)
 
-
+# Administrador cria um novo grupo sem repeti-lo
 @app.route('/criar_grupo/<string:admin>', methods =['GET', 'POST'])
 def criar_grupo(admin):
+    """Função para criar grupo, recebe como parametro o nome do administrador"""
     msg = ''
     cursor = mysql.connection.cursor()
     cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (session['id'], ))
@@ -247,9 +253,10 @@ def criar_grupo(admin):
     return render_template('criar_grupo.html', msg = msg, descricao_funcao = funcoes, admin = admin, resultado= resultado, foto_perfil=foto_perfil)
 
 
-## VIEW E PROCEDURE VISUALIZAR ADMINISTRADORES ##
+# Lista administradores da aplicacao(view) e mostra a quantidade de administradores(procedure)
 @app.route('/listar_administradores/<string:admin>', methods =['GET', 'POST'])
 def listar_administradores(admin):
+    """Lista administradores cadastrados no banco de dados, recebe administrador como parâmetro"""
     funcoes = session.get('functions')
     id_administrador = session['id']
     cur.callproc('count_administradores', )
@@ -274,10 +281,11 @@ def listar_administradores(admin):
         administradores_array.append(adm)
     return render_template('listar_administradores.html', admin = admin, descricao_funcao = funcoes, foto_perfil = foto_perfil, resultado = resultado, administradores_array = administradores_array, count_administradores = countadmin)
 
-## EDITAR GRUPOS ##
 
+# Renderiza html para procurar/editar um ou mais grupos na aplicacao
 @app.route('/procurar_editar_grupo_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_editar_grupo_template(admin):
+    """Renderiza html para procurar um ou mais grupos na aplicação, recebe administrador como parâmetro"""
     funcoes = session.get('functions')
     id_administrador = session['id']
     cursor = mysql.connection.cursor()
@@ -291,21 +299,36 @@ def procurar_editar_grupo_template(admin):
         resultado = "vazio"
     return render_template('procurar_grupo.html', admin = admin , descricao_funcao = funcoes, foto_perfil = foto_perfil, resultado = resultado)
 
+# Renderiza html para editar um grupo na aplicacao
 @app.route('/editar_grupo_template', methods =['GET', 'POST'])
 def editar_grupo_template():
+    """Renderiza html para editar um grupo na aplicação"""
     # POST request
     msg = ''
+    id_administrador = session['id']
     funcoes = session.get('functions')
+    cursor = mysql.connection.cursor()
     if request.method == 'POST':
         grupos = request.get_json()
         for linha in grupos.items():
             arr = linha[1]
-        return render_template('editar_grupo.html', msg = msg, grupo = arr, descricao_funcao = funcoes)
+        cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_administrador, ))
+        foto_perfil = cursor.fetchone()
+        if foto_perfil[0]:
+            foto_perfil = foto_perfil[0]
+            foto_perfil = foto_perfil.decode('utf-8')
+            resultado = "contem"
+        else:
+            resultado = "vazio"
+        return render_template('editar_grupo.html', msg = msg, grupo = arr, descricao_funcao = funcoes, resultado = resultado, foto_perfil = foto_perfil)
 
+# Executa query de update para um grupo e renderiza html de procurar grupo
 @app.route('/editar_grupo', methods =['GET', 'POST'])
 def editar_grupo():
+    """Executa query de update para um grupo e renderiza html de procurar grupo"""
     # POST request
     msg = ''
+    id_administrador = session['id']
     funcoes = session.get('functions')
     if request.method == 'POST' and 'nome' in request.form:
         nome = request.form['nome']
@@ -317,13 +340,22 @@ def editar_grupo():
             cursor.execute("UPDATE grupos SET nome = %s WHERE nome = %s", (nome, grupo_nome, ))
             mysql.connection.commit()
             msg = 'nome do grupo alterado com sucesso!'
-        elif():
+        else:
             msg = 'Esse nome para grupo já existe. Tente outro'
-    return render_template('procurar_grupo.html', msg = msg, descricao_funcao = funcoes)
+        cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_administrador, ))
+        foto_perfil = cursor.fetchone()
+        if foto_perfil[0]:
+            foto_perfil = foto_perfil[0]
+            foto_perfil = foto_perfil.decode('utf-8')
+            resultado = "contem"
+        else:
+            resultado = "vazio"
+    return render_template('procurar_grupo.html', msg = msg, descricao_funcao = funcoes, resultado = resultado, foto_perfil = foto_perfil)
         
-    
+# Renderiza html para procurar/deletar um ou mais grupos na aplicacao  
 @app.route('/procurar_deletar_grupo_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_deletar_grupo_template(admin):
+    """Renderiza html para deletar um ou mais grupos na aplicação, recebe administrador como parâmetro"""
     funcoes = session.get('functions')
     id_administrador = session['id']
     cursor = mysql.connection.cursor()
@@ -337,8 +369,10 @@ def procurar_deletar_grupo_template(admin):
         resultado = "vazio"
     return render_template('deletar_grupo.html', admin = admin , descricao_funcao = funcoes, resultado=resultado, foto_perfil=foto_perfil)
 
+# Renderiza html para deletar um grupo na aplicacao
 @app.route('/deletar_grupo', methods =['GET', 'POST'])
 def deletar_grupo():
+    """Renderiza html para deletar um grupo na aplicacao"""
     # POST request
     msg = ''
     if request.method == 'POST':
@@ -353,9 +387,11 @@ def deletar_grupo():
             msg = 'Grupo deletado com sucesso!'
         #return 'Sucesss', 200
     return render_template('deletar_grupo.html', msg = msg) and 'Sucesss', 200
-    
+ 
+# Renderiza html para procurar/banir um ou mais usuarios na aplicacao   
 @app.route('/procurar_banir_usuario_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_banir_usuario_template(admin):
+    """Renderiza html para procurar/banir um ou mais usuarios na aplicacao"""
     funcoes = session.get('functions')
     id_administrador = session['id']
     cursor = mysql.connection.cursor()
@@ -369,8 +405,43 @@ def procurar_banir_usuario_template(admin):
         resultado = "vazio"
     return render_template('banir_usuario.html', admin = admin , descricao_funcao = funcoes, resultado = resultado, foto_perfil = foto_perfil)
 
+# Executa query de delete da tabela usuarios e insere na tabela banidos e renderiza html de procurar usuarios
+@app.route('/banir_usuario', methods =['GET', 'POST'])
+def banir_usuario():
+    """Executa query de delete da tabela usuarios e insere na tabela banidos e renderiza html de procurar usuarios"""
+    # POST request
+    id_admin = session['id']
+    msg = ''
+    if request.method == 'POST':
+        usuarios = request.get_json()
+        cursor = mysql.connection.cursor()
+        for linha in usuarios.items():
+            arr = linha[1]
+            
+        for item in arr:
+            cursor.execute("SELECT email FROM usuarios where nome = %s", (item, ))
+            email_usuario = cursor.fetchone()
+            sql = ("DELETE FROM usuarios WHERE nome = %s")
+            cursor.execute(sql, (item, ))
+            mysql.connection.commit()
+            cursor.execute("INSERT INTO banidos(id_administrador, email) VALUES (%s, %s)", (id_admin, email_usuario))
+            mysql.connection.commit()
+    return render_template('banir_usuario.html', msg = msg) and 'Sucesss', 200
+
+# Retorna JSON dos usuarios banidos
+@app.route('/procurar_banir_usuario', methods =['GET', 'POST'])
+def procurar_banir_usuario():
+    """Retorna JSON dos usuarios banidos"""
+    searchbox = "%" + request.values.get("text") + "%"
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT nome FROM usuarios where nome Like %s order by nome", (searchbox, ))
+    result = cursor.fetchall()
+    return jsonify(result)
+
+# Renderiza html para procurar/editar um usuario na aplicacao   
 @app.route('/procurar_editar_usuario_template/<string:admin>', methods =['GET', 'POST'])
 def procurar_editar_usuario_template(admin):
+    """Renderiza html para procurar/editar um usuario na aplicacao"""
     funcoes = session.get('functions')
     id_administrador = session['id']
     cursor = mysql.connection.cursor()
@@ -384,11 +455,14 @@ def procurar_editar_usuario_template(admin):
         resultado = "vazio"
     return render_template('procurar_usuario.html', admin = admin , descricao_funcao = funcoes, resultado = resultado, foto_perfil = foto_perfil)
 
+# Renderiza html para editar um usuario na aplicacao   
 @app.route('/editar_usuario_template', methods =['GET', 'POST'])
 def editar_usuario_template():
+    """Renderiza html para editar um usuario na aplicacao"""
     # POST request
     msg = ''
     funcoes = session.get('functions')
+    id_administrador = session['id']
     cursor = mysql.connection.cursor()
     if request.method == 'POST':
         usuarios = request.get_json()
@@ -400,10 +474,20 @@ def editar_usuario_template():
         result = cursor.fetchone()
         for linha in result:
             arr_usuario.append(linha)
-        return render_template('editar_usuario.html', msg = msg, usuario = arr_usuario, descricao_funcao = funcoes)
-    
+        cursor.execute('SELECT foto_de_perfil FROM administradores where id_administrador = %s', (id_administrador, ))
+        foto_perfil = cursor.fetchone()
+        if foto_perfil[0]:
+            foto_perfil = foto_perfil[0]
+            foto_perfil = foto_perfil.decode('utf-8')
+            resultado = "contem"
+        else:
+            resultado = "vazio"
+        return render_template('editar_usuario.html', msg = msg, usuario = arr_usuario, descricao_funcao = funcoes, resultado=resultado, foto_perfil = foto_perfil)
+  
+# Executa query de update da tabela usuarios e renderiza html de procurar usuarios  
 @app.route('/editar_usuario', methods =['GET', 'POST'])
 def editar_usuario():
+    """Executa query de update da tabela usuarios e renderiza html de procurar usuarios"""
     # POST request
     msg = ''
     id_admin = session['id']
@@ -426,7 +510,9 @@ def editar_usuario():
             foto_perfil = foto_perfil.decode('utf-8')
             result = "contem"
         else:
+            
             result = "vazio"
+
         if (id_usuario == None):
             if nome == "":
                 nome = nomeAtual
@@ -445,34 +531,10 @@ def editar_usuario():
             msg = 'Esse nome ou email para usuario já existe. Tente outro'
     return render_template('procurar_usuario.html', msg = msg, descricao_funcao = funcoes, resultado = result, foto_perfil = foto_perfil)
 
-@app.route('/banir_usuario', methods =['GET', 'POST'])
-def banir_usuario():
-    # POST request
-    id_admin = session['id']
-    msg = ''
-    if request.method == 'POST':
-        usuarios = request.get_json()
-        cursor = mysql.connection.cursor()
-        for linha in usuarios.items():
-            arr = linha[1]
-            
-        for item in arr:
-            cursor.execute("SELECT email FROM usuarios where nome = %s", (item, ))
-            email_usuario = cursor.fetchone()
-            sql = ("DELETE FROM usuarios WHERE nome = %s")
-            cursor.execute(sql, (item, ))
-            mysql.connection.commit()
-            cursor.execute("INSERT INTO banidos(id_administrador, email) VALUES (%s, %s)", (id_admin, email_usuario))
-            mysql.connection.commit()
-            #msg = 'Usuário(s) banido(s) com sucesso!'
-        # for item in arr:
-        #     msg = 'Usuário(s) banido(s) com sucesso!'
-        #return 'Sucesss', 200
-    return render_template('banir_usuario.html', msg = msg) and 'Sucesss', 200
-        
-
+# Renderiza html para entrar em um grupo na aplicacao
 @app.route('/procurar_entrar_grupo_template/<string:usuario>', methods =['GET', 'POST'])
 def procurar_entrar_grupo_template(usuario):
+    """Renderiza html para entrar em um grupo na aplicacao"""
     id_usuario = session['id']
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT foto_de_perfil FROM usuarios where id_usuario = %s", (id_usuario, ))
@@ -485,8 +547,10 @@ def procurar_entrar_grupo_template(usuario):
         result = "vazio"
     return render_template('entrar_grupo.html', usuario = usuario, resultado = result, foto_perfil = foto_perfil)
 
+# Executa query para entrar em um grupo na aplicacao e renderiza html de entrar em grupo
 @app.route('/entrar_grupo', methods =['GET', 'POST'])
 def entrar_grupo():
+    """Executa query para entrar em um grupo na aplicacao e renderiza html de entrar em grupo"""
     id_usuario = session['id']
     msg = ''
     if request.method == 'POST':
@@ -516,6 +580,7 @@ def entrar_grupo():
         #return 'Sucesss', 200
     return render_template('entrar_grupo.html', msg = msg) and 'Sucesss', 200
 
+# Executa query para entrar em um grupo na aplicacao e renderiza html de entrar em grupo
 @app.route('/sair_grupo', methods =['GET', 'POST'])
 def sair_grupo():
     id_usuario = session['id']
@@ -538,8 +603,10 @@ def sair_grupo():
         #return 'Sucesss', 200
     return render_template('entrar_grupo.html', msg = msg)
 
+# Retorna JSON da procura do grupo
 @app.route('/procurar_grupo', methods =['GET', 'POST'])
 def procurar_grupo():
+    """Retorna JSON para procurar grupo"""
     id_usuario = session['id']
     searchbox = "%" + request.values.get("text") + "%"
     cursor = mysql.connection.cursor()
@@ -555,10 +622,10 @@ def procurar_grupo():
             u.append(grupo[0])
     return jsonify(u)
 
-
+# Retorna JSON para mostrar grupo
 @app.route('/mostrar_grupos', methods =['GET', 'POST'])
 def mostrar_grupos():
-    
+    """Retorna JSON para mostrar grupo"""
     cursor = mysql.connection.cursor()
     id_usuario = session['id']
     cursor.execute("SELECT id_grupo FROM grupos_usuarios where id_usuario = %s", (id_usuario, ))
@@ -571,8 +638,10 @@ def mostrar_grupos():
         u.append(nome)
     return jsonify(u)
 
+# Renderiza html para procurar/adicionar um amigo na aplicacao
 @app.route('/procurar_adicionar_usuarios_template/<string:usuario>', methods =['GET', 'POST'])
 def procurar_adicionar_usuarios_template(usuario):
+    """Renderiza html para procurar/adicionar um amigo na aplicacao"""
     id_usuario = session['id']
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT foto_de_perfil FROM usuarios where id_usuario = %s", (id_usuario, ))
@@ -585,8 +654,10 @@ def procurar_adicionar_usuarios_template(usuario):
         result = "vazio"
     return render_template('procurar_adicionar_usuario.html', usuario = usuario, resultado = result, foto_perfil = foto_perfil)
 
+# Executa query para adicionar usuario e renderiza html para procurar usuario
 @app.route('/adicionar_usuario', methods =['GET', 'POST'])
 def adicionar_usuario():
+    """Executa query para adicionar usuario"""
     id_usuario1 = session['id']
     if request.method == 'POST':
         usuarios = request.get_json()
@@ -607,8 +678,10 @@ def adicionar_usuario():
         #return 'Sucesss', 200
     return render_template('procurar_adicionar_usuario.html', msg = msg)
 
+# Executa query para desfazer amizade
 @app.route('/desfazer_amizade', methods =['GET', 'POST'])
 def desfazer_amizade():
+    """Executa query para desfazer amizade"""
     id_usuario1 = session['id']
     if request.method == 'POST':
         usuarios = request.get_json()
@@ -629,18 +702,10 @@ def desfazer_amizade():
         #return 'Sucesss', 200
     return render_template('procurar_adicionar_usuario.html', msg = msg)
 
-
-@app.route('/procurar_banir_usuario', methods =['GET', 'POST'])
-def procurar_banir_usuario():
-    id_usuario1 = session['id']
-    searchbox = "%" + request.values.get("text") + "%"
-    cursor = mysql.connection.cursor()
-    cursor.execute("SELECT nome FROM usuarios where nome Like %s order by nome", (searchbox, ))
-    result = cursor.fetchall()
-    return jsonify(result)
-
+# Retorna JSON para de usuarios pesquisados
 @app.route('/procurar_usuario', methods =['GET', 'POST'])
 def procurar_usuario():
+    """Retorna JSON para de usuarios pesquisados"""
     id_usuario1 = session['id']
     searchbox = "%" + request.values.get("text") + "%"
     cursor = mysql.connection.cursor()
@@ -656,9 +721,10 @@ def procurar_usuario():
             u.append(user[0])
     return jsonify(u)
 
+# Retorna JSON dos amigos de um determindado usuario
 @app.route('/mostrar_amigos', methods =['GET', 'POST'])
 def mostrar_amigos():
-    
+    """Retorna JSON dos amigos de um determindado usuario"""
     cursor = mysql.connection.cursor()
     id_usuario1 = session['id']
     cursor.execute("SELECT id_usuario2 FROM amigos where id_usuario1 = %s", (id_usuario1, ))
@@ -673,10 +739,11 @@ def mostrar_amigos():
 
 ##  Postagens_administrdor  ##
 
+# Retorna JSON das postagens de todos os adminsitradores da rede social
 @app.route('/procurar_postagem_administrador', methods =['GET', 'POST'])
 def procurar_postagem_administrador():
+    """Retorna JSON das postagens de todos os adminsitradores da rede social"""
     cursor = mysql.connection.cursor()
-    # criado
     cursor.execute("SELECT descricao FROM postagens_administradores order by id_postagens_administradores")
     result_postagem = cursor.fetchall()
     cursor.execute("SELECT id_administrador FROM postagens_administradores order by id_postagens_administradores")
@@ -693,8 +760,10 @@ def procurar_postagem_administrador():
         r.append(u[i]+result[i])
     return jsonify(r)
 
+# Renderiza html das postagens dos administradores
 @app.route('/adicionar_postagens_administrador_template/<string:admin>', methods =['GET', 'POST'])
 def adicionar_postagens_administrador_template(admin):
+    """Renderiza html das postagens dos administradores, recebe administrador como parâmetro"""
     funcionalidades = session['functions']
     id_administrador = session["id"]
     cursor = mysql.connection.cursor()
@@ -708,8 +777,10 @@ def adicionar_postagens_administrador_template(admin):
         resultado = "vazio"
     return render_template('adicionar_postagens_administrador.html', admin = admin, foto_perfil = foto_perfil, descricao_funcao = funcionalidades, resultado=resultado)
 
+# Executa query para adicionar postagem de um administrador
 @app.route('/adicionar_postagens_administrador', methods =['GET', 'POST'])
 def adicionar_postagens_administrador():
+    """Executa query para adicionar postagem de uma administrador"""
     msg = ''  
     funcionalidades = session['functions']
     id_administrador = session["id"]
@@ -735,10 +806,11 @@ def adicionar_postagens_administrador():
 
 ## Postagens_usuarios ##
 
+# Retorna JSON das postagens de todos os usuarios da rede social 
 @app.route('/procurar_postagem', methods =['GET', 'POST'])
 def procurar_postagem():
+    """# Retorna JSON das postagens de todos os usuarios da rede social """
     cursor = mysql.connection.cursor()
-    # criado
     cursor.execute("SELECT descricao FROM postagens_usuarios order by id_postagens_usuarios")
     result_postagem = cursor.fetchall()
     cursor.execute("SELECT id_usuario FROM postagens_usuarios order by id_postagens_usuarios")
@@ -755,8 +827,10 @@ def procurar_postagem():
         r.append(u[i]+result[i])
     return jsonify(r)
 
+# Renderiza html das postagens de um usuario
 @app.route('/adicionar_postagens_template/<string:usuario>', methods =['GET', 'POST'])
 def adicionar_postagens_template(usuario):
+    """Renderiza html das postagens de um usuario"""
     id_usuario = session['id']
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT foto_de_perfil FROM usuarios where id_usuario = %s", (id_usuario, ))
@@ -769,6 +843,7 @@ def adicionar_postagens_template(usuario):
         result = "vazio"
     return render_template('adicionar_postagens.html', usuario = usuario, resultado = result, foto_perfil = foto_perfil)
 
+# Executa query para adicionar postagem de um usuario
 @app.route('/adicionar_postagens', methods =['GET', 'POST'])
 def adicionar_postagens():
     msg = ''
@@ -793,12 +868,12 @@ def adicionar_postagens():
         msg = 'Por favor, não poste nada em branco!'
     return render_template('adicionar_postagens.html', msg = msg, resultado = result, foto_perfil = foto_perfil)
 
-
-
 ## Upload de imagens ##
 
+# Renderiza html para upload de uma foto de perfil de um administrador/usuario
 @app.route('/upload_form')
 def upload_form():
+    """Renderiza html para upload de uma foto de perfil de uma administrador/usuario"""
     id = session['id']
     cursor = mysql.connection.cursor()
     if session["system"] == 'usuario':
@@ -815,8 +890,10 @@ def upload_form():
         result = "vazio"
     return render_template('upload.html', foto_perfil = foto_perfil, resultado = result, tipo_usuario = session["system"], funcoes = session['functions'])
 
+# Executa a query de update da foto de perfil de um usuario ou administrador
 @app.route('/upload_de_imagem', methods=['POST'])
 def upload_de_imagem():
+    """Executa a query de update da foto de perfil de um usuario ou administrador"""
     id = session['id']
     if 'file' not in request.files:
         flash('No file part')
@@ -842,11 +919,13 @@ def upload_de_imagem():
         flash('A imagem foi alterada com sucesso')
         return render_template('upload.html', foto_perfil=encoded_img_data.decode('utf-8'), tipo_usuario = tipo_usuario, funcoes = session['functions'])
     else:
-        flash('Allowed image types are -> png, jpg, jpeg, gif')
+        flash('Extensões de imagens permitidas -> png, jpg, jpeg, gif')
         return redirect(request.url)
 
+# Seleciona a foto de um usuario/administrador
 @app.route('/display/<filename>')
 def display_image(filename):
+    """Seleciona a foto de um usuario/administrador"""
     tipo_usuario = session["system"]
     id = session['id']
     cursor = mysql.connection.cursor()
@@ -860,8 +939,6 @@ def display_image(filename):
         foto_perfil = foto_perfil[0]
         foto_perfil = foto_perfil.decode('utf-8')
     return redirect(url_for('static', foto_perfil=foto_perfil), code=301)
-    # return redirect(url_for('static', foto_perfil="/static/uploads/img_default.png"), code=301)
-
 
 if __name__ == "__main__":
   app.run(debug = True)

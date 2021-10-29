@@ -23,11 +23,14 @@
       <li><a href="{{ url_for('dashboard_admin', admin = session.username) }}">
           Inicio
       </a></li>
-      <li><a href="{{ url_for('upload_form', admin = session.username) }}">
-          Foto de Perfil
-      </a></li>
       <li><a href="{{ url_for('adicionar_postagens_administrador_template', admin = session.username) }}">
         Postagens
+      </a></li>
+      <li><a href="{{ url_for('listar_administradores', admin = session.username) }}">
+        Listar Administradores
+      </a></li>
+      <li><a href="{{ url_for('upload_form', admin = session.username) }}">
+        Foto de Perfil
       </a></li>
       {% for item in funcoes %}
         {% if item == "Criar Grupos" %}

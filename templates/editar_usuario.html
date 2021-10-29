@@ -7,16 +7,13 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
-    <div class="header">
-        <h1 class="word">Editar Usuário</h1></br></br>
-    </div>
+    <h1>Editar Usuário</h1></br></br>
     {% if resultado == "vazio" %}
         <div>
             <img src="/static/uploads/img_default.png" class="avatar">
         </div>
-        {% else %}
+    {% else %}
         <div>
-            <!-- <img src="{{ url_for('display_image', filename=filename) }}" class="avatar"> -->
             <img src="data:image/jpeg;base64,{{ foto_perfil }}" class="avatar"/>
         </div>
     {% endif %}
@@ -25,6 +22,12 @@
     </a></li>
     <li><a href="{{ url_for('adicionar_postagens_administrador', admin = session.username) }}">
         Postagens
+    </a></li>
+    <li><a href="{{ url_for('listar_administradores', admin = session.username) }}">
+        Listar Administradores
+    </a></li>
+    <li><a href="{{ url_for('upload_form', admin = session.username) }}">
+        Foto de Perfil
     </a></li>
     {% for item in descricao_funcao %}
         {% if item == "Criar Grupos" %}

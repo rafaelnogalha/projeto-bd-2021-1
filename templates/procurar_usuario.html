@@ -12,9 +12,8 @@
         <div>
             <img src="/static/uploads/img_default.png" class="avatar">
         </div>
-        {% else %}
+    {% else %}
         <div>
-            <!-- <img src="{{ url_for('display_image', filename=filename) }}" class="avatar"> -->
             <img src="data:image/jpeg;base64,{{ foto_perfil }}" class="avatar"/>
         </div>
     {% endif %}
@@ -23,6 +22,9 @@
     </a></li>
     <li><a href="{{ url_for('adicionar_postagens_administrador', admin = session.username) }}">
         Postagens
+    </a></li>
+    <li><a href="{{ url_for('listar_administradores', admin = session.username) }}">
+        Listar Administradores
     </a></li>
     <li><a href="{{ url_for('upload_form', admin = session.username) }}">
         Foto de Perfil
@@ -81,14 +83,11 @@
     function clickFunction() {
         var elements_in = document.getElementsByClassName("list-input");
         var elements_li = document.getElementsByClassName("list-item");
-        // l = document.getElementById("1").getAttribute('data-value');
-        // console.log(l);
-        // var el = "";
+
         var l;
         for (var i = 0; i < elements_in.length; i++) {
             if(elements_in[i].checked == true){
                 l = $(elements_li[i]).attr("data-value");
-                // arr.push(l);
             }
         }
         fetch('/editar_usuario_template', {

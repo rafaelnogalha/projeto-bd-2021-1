@@ -4,9 +4,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
-    <div class="header">
-        <h1 class="word">Editar Grupo</h1>
-    </div>
+    <h1>Editar Grupo</h1>
+    
     {% if resultado == "vazio" %}
         <div>
             <img src="/static/uploads/img_default.png" class="avatar">
@@ -22,6 +21,9 @@
     </a></li>
     <li><a href="{{ url_for('adicionar_postagens_administrador', admin = session.username) }}">
         Postagens
+    </a></li>
+    <li><a href="{{ url_for('listar_administradores', admin = session.username) }}">
+        Listar Administradores
     </a></li>
     <li><a href="{{ url_for('upload_form', admin = session.username) }}">
         Foto de Perfil
@@ -52,6 +54,7 @@
     <input id="livebox" name="nome" type="text" placeholder="Insira o nome do grupo"/>
     <p id = "datalist"></p>
     <button onclick="clickFunction()">Editar</button>
+    <p>{{msg}}</p>
 </body>
 <script>
     $(document).ready(function(){
@@ -79,9 +82,6 @@
     function clickFunction() {
         var elements_in = document.getElementsByClassName("list-input");
         var elements_li = document.getElementsByClassName("list-item");
-        // l = document.getElementById("1").getAttribute('data-value');
-        // console.log(l);
-        // var el = "";
         var l;
         for (var i = 0; i < elements_in.length; i++) {
             if(elements_in[i].checked == true){

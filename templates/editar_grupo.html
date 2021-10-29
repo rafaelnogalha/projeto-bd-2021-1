@@ -7,9 +7,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
-    <div class="header">
-        <h1 class="word">Editar Grupo</h1></br></br>
-    </div>
+    <h1>Editar Grupo</h1></br></br>
     {% if resultado == "vazio" %}
         <div>
             <img src="/static/uploads/img_default.png" class="avatar">
@@ -25,6 +23,9 @@
     </a></li>
     <li><a href="{{ url_for('adicionar_postagens_administrador', admin = session.username) }}">
         Postagens
+    </a></li>
+    <li><a href="{{ url_for('listar_administradores', admin = session.username) }}">
+        Listar Administradores
     </a></li>
     {% for item in descricao_funcao %}
         {% if item == "Criar Grupos" %}
@@ -58,7 +59,6 @@
       </form>
     </h2>
     
-    <!-- <button onclick="clickFunction()">Editar!</button -->
 </body>
 <style>
     .avatar {
@@ -67,5 +67,5 @@
     height: 50px;
     border-radius: 50%;
     }
-</style>>
+</style>
 </html>

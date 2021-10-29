@@ -21,11 +21,11 @@
             <li><a href="{{ url_for('adicionar_postagens_administrador_template', admin = session.username) }}">
                 Postagens
             </a></li>
-            <li><a href="{{ url_for('upload_form', admin = session.username) }}">
-                Foto de Perfil
-            </a></li>
             <li><a href="{{ url_for('listar_administradores', admin = session.username) }}">
                 Listar Administradores
+            </a></li>
+            <li><a href="{{ url_for('upload_form', admin = session.username) }}">
+                Foto de Perfil
             </a></li>
             
             {% for item in descricao_funcao %}
@@ -52,10 +52,6 @@
                 {% endif %}
             {% endfor %}
         </ul>
-        <!-- <li><a href="news.asp">Criar Grupo</a></li>
-        <li><a href="contact.asp">Deletar Grupo</a></li>
-        <li><a href="about.asp">Editar Grupo</a></li>
-        <li><a href="about.asp">Banir Usuario</a></li> -->
     </br></br></br></br></br>
         <div align="center">
           <div align="center" class="border">
