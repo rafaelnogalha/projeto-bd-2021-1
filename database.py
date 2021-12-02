@@ -5,8 +5,8 @@ def criar_bd_tabelas():
   
   db = mysql.connect(
     host = "localhost",
-    user = "admin",
-    password = "L@g0n1c0",
+    user = "",
+    password = "",
     auth_plugin='mysql_native_password',
   )
 
@@ -18,9 +18,9 @@ def criar_bd_tabelas():
 
   db = mysql.connect(
     host = "localhost",
-    user = "admin",
-    password = "L@g0n1c0",
-    database = "rede_social",
+    user = "",
+    password = "",
+    database = "",
     auth_plugin='mysql_native_password',
   )
   
